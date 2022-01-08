@@ -1,0 +1,1 @@
+print ("Allah, I Love You")
