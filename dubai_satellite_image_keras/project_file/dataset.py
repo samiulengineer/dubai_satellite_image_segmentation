@@ -12,17 +12,15 @@ from PIL import Image
 from tensorflow.keras.utils import to_categorical
 import os 
 from sklearn.model_selection import train_test_split
+from config import *
 
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]= "0"
 
-root_directory = '/home/mdsamiul/InSAR-Coding/Data/Aerial_Image'
-patch_size = 256
+
 
 
 image_dataset = []
 
-for path, subdirs, files in os.walk(root_directory,topdown=True):
+for path, subdirs, files in os.walk(dataset_dir, topdown=True):
     # print(sorted(subdirs))
     dirname = path.split(os.path.sep)[-1]
     if dirname == 'images':   #Find all 'images' directories
@@ -61,7 +59,7 @@ image_dataset = np.array(image_dataset)
                         
 mask_dataset = []
 
-for path, subdirs, files in os.walk(root_directory,topdown=True):
+for path, subdirs, files in os.walk(dataset_dir, topdown=True):
         
     dirname = path.split(os.path.sep)[-1]
     if dirname == 'masks':   #Find all 'images' directories
@@ -120,13 +118,13 @@ def rgb_to_2D_label(label):
     Suply our labale masks as input in RGB format. 
     Replace pixels with specific RGB values ...
     """
-    label_seg = np.zeros(label.shape,dtype=np.uint8)
-    label_seg [np.all(label == Building,axis=-1)] = 0
-    label_seg [np.all(label==Land,axis=-1)] = 1
-    label_seg [np.all(label==Road,axis=-1)] = 2
-    label_seg [np.all(label==Vegetation,axis=-1)] = 3
-    label_seg [np.all(label==Water,axis=-1)] = 4
-    label_seg [np.all(label==Unlabeled,axis=-1)] = 5
+    label_seg = np.zeros(label.shape,dtype = np.uint8)
+    label_seg [np.all(label == Building, axis = -1)] = 0
+    label_seg [np.all(label == Land, axis = -1)] = 1
+    label_seg [np.all(label == Road, axis = -1)] = 2
+    label_seg [np.all(label == Vegetation, axis = -1)] = 3
+    label_seg [np.all(label == Water, axis = -1)] = 4
+    label_seg [np.all(label == Unlabeled, axis = -1)] = 5
     
     label_seg = label_seg[:,:,0]  #Just take the first channel, no need for all 3 channels
     
@@ -141,7 +139,7 @@ for i in range(mask_dataset.shape[0]):
 
 labels = np.array(labels)
 
-labels = np.expand_dims(labels, axis=3)
+labels = np.expand_dims(labels, axis = 3)
 
 n_classes = len(np.unique(labels))
 labels_cat = to_categorical(labels, num_classes=n_classes)
@@ -161,8 +159,8 @@ if __name__ == '__main__':
     # np.save("/home/mdsamiul/InSAR-Coding/Data/Aerial_Image/image_dataset",image_dataset)
     # mask_dataset =  np.array(mask_dataset)
     # np.save("/home/mdsamiul/InSAR-Coding/Data/Aerial_Image/mask_dataset",mask_dataset)
-    image_dataset=np.load("/home/mdsamiul/InSAR-Coding/Data/Aerial_Image/image_dataset.npy")
-    mask_dataset=np.load("/home/mdsamiul/InSAR-Coding/Data/Aerial_Image/mask_dataset.npy")
+    # image_dataset=np.load("/home/mdsamiul/InSAR-Coding/Data/Aerial_Image/image_dataset.npy")
+    # mask_dataset=np.load("/home/mdsamiul/InSAR-Coding/Data/Aerial_Image/mask_dataset.npy")
     
     print("Total number of images : {}".format(len(image_dataset)))
     print("Total number of masks : {}".format(len(mask_dataset)))

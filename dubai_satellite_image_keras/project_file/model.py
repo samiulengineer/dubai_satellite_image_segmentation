@@ -5,14 +5,17 @@ from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, c
 from tensorflow.keras import backend as K
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
-from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, concatenate, Activation, MaxPool2D, Lambda
+from tensorflow.keras.layers import Conv2D, ReLU, Concatenate, Activation, MaxPool2D, Lambda
 tf.config.experimental_run_functions_eagerly(True)
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]= "3"
+os.environ["CUDA_VISIBLE_DEVICES"]= "2"
 
 
-def unet(n_classes=6, IMG_HEIGHT=256, IMG_WIDTH=256, IMG_CHANNELS=3):
+# UNET Model
+# ----------------------------------------------------------------------------------------------
+
+def unet(num_classes = 6, img_height = 256, img_width = 256, in_channels = 3):
     
     inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
  
@@ -74,9 +77,10 @@ def unet(n_classes=6, IMG_HEIGHT=256, IMG_WIDTH=256, IMG_CHANNELS=3):
     
     
     
-# Modified-U-NET Model
+# Modification UNET Model
+# ----------------------------------------------------------------------------------------------
 
-def mod_unet(n_classes=6, IMG_HEIGHT=256, IMG_WIDTH=256, IMG_CHANNELS=3):
+def mod_unet(num_classes = 6, img_height = 256, img_width = 256, in_channels = 3):
     
     inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
     
@@ -115,9 +119,7 @@ def mod_unet(n_classes=6, IMG_HEIGHT=256, IMG_WIDTH=256, IMG_CHANNELS=3):
     c7 = Dropout(0.3)(c7)
     c7 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c7)
     
-    
-    
-    #Expansive path 
+    # Expansive path 
     
     u8 = Conv2DTranspose(512, (2, 2), strides=(2, 2), padding='same')(c7)
     u8 = concatenate([u8, c6])
@@ -163,553 +165,320 @@ def mod_unet(n_classes=6, IMG_HEIGHT=256, IMG_WIDTH=256, IMG_CHANNELS=3):
 
 
 
-
-
-
-# U2-NET Model
-
-class REBNCONV(Layer):
-    def __init__(self, in_ch=3, out_ch=3, dirate=1):
-        super(REBNCONV,self).__init__()
-        self.conv_s1 = Conv2D(out_ch, 3, padding="same")
-        self.bn_s1 = BatchNormalization
-        self.relu_s1 = ReLU()
-
-    def call(self, inputs, **kwargs):
-        xout = self.relu_s1(self.bn_s1()(self.conv_s1(inputs)))
-        return xout
-
-def _upsample_like(tensorA, tensorB):
-    sB = K.int_shape(tensorB)
-    def resize_like(tensor, sB): return tf.compat.v1.image.resize_bilinear(tensor, sB[1:3], align_corners=True)
-    return Lambda(resize_like, arguments={'sB': sB})(tensorA)
-
-
-class RSU7(Layer):
-
-    def __init__(self, in_ch=3, mid_ch=12, out_ch=3):
-        super(RSU7,self).__init__()
-
-        self.rebnconvin = REBNCONV(in_ch, out_ch, dirate=1)
-
-        self.rebnconv1 = REBNCONV(out_ch, mid_ch, dirate=1)
-        self.pool1 = MaxPool2D(2, strides=2)
-
-        self.rebnconv2 = REBNCONV(mid_ch, mid_ch, dirate=1)
-        self.pool2 = MaxPool2D(2,strides=2)
-
-        self.rebnconv3 = REBNCONV(mid_ch, mid_ch, dirate=1)
-        self.pool3 = MaxPool2D(2, strides=2)
-
-        self.rebnconv4 = REBNCONV(mid_ch, mid_ch, dirate=1)
-        self.pool4 = MaxPool2D(2, strides=2)
-
-        self.rebnconv5 = REBNCONV(mid_ch, mid_ch, dirate=1)
-        self.pool5 = MaxPool2D(2,strides=2)
-
-        self.rebnconv6 = REBNCONV(mid_ch, mid_ch, dirate=1)
-
-        self.rebnconv7 = REBNCONV(mid_ch, mid_ch, dirate=2)
-
-        self.rebnconv6d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv5d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv4d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv3d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv2d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv1d = REBNCONV(mid_ch*2, out_ch, dirate=1)
-
-    def call(self, rsu7_input, **kwargs):
-
-        hxin = self.rebnconvin(rsu7_input)
-
-        hx1 = self.rebnconv1(hxin)
-        hx = self.pool1(hx1)
-
-        hx2 = self.rebnconv2(hx)
-        hx = self.pool2(hx2)
-
-        hx3 = self.rebnconv3(hx)
-        hx = self.pool3(hx3)
-
-        hx4 = self.rebnconv4(hx)
-        hx = self.pool4(hx4)
-
-        hx5 = self.rebnconv5(hx)
-        hx = self.pool5(hx5)
-
-        hx6 = self.rebnconv6(hx)
-
-        hx7 = self.rebnconv7(hx6)
-
-        # hx6d =  self.rebnconv6d(concatenate((hx7, hx6), 3))
-        hx6d = self.rebnconv6d(concatenate([hx7, hx6], axis = 3))
-        hx6dup = _upsample_like(hx6d, hx5)
-
-        hx5d =  self.rebnconv5d(concatenate([hx6dup, hx5], axis = 3))
-        hx5dup = _upsample_like(hx5d, hx4)
-
-        hx4d = self.rebnconv4d(concatenate([hx5dup, hx4], axis = 3))
-        hx4dup = _upsample_like(hx4d, hx3)
-
-        hx3d = self.rebnconv3d(concatenate([hx4dup, hx3], axis = 3))
-        hx3dup = _upsample_like(hx3d, hx2)
-
-        hx2d = self.rebnconv2d(concatenate([hx3dup, hx2], axis = 3))
-        hx2dup = _upsample_like(hx2d, hx1)
-
-        hx1d = self.rebnconv1d(concatenate([hx2dup, hx1], axis = 3))
-        # hx1dup = _upsample_like(hx1d, hxin)
-
-        # return hx1dup + hxin
-        return hx1d + hxin
-
-
-
-    def summary(self):
-        x = Input(shape=(256, 256, 3))
-        model = Model(inputs=[x], outputs=self.call(x))
-        return model.summary()
-
-
-
-### RSU-6 ###
-class RSU6(Layer):#UNet06DRES(Layer):
-
-    def __init__(self, in_ch=3, mid_ch=12, out_ch=3):
-        super(RSU6,self).__init__()
-
-        self.rebnconvin = REBNCONV(in_ch, out_ch, dirate=1)
-
-        self.rebnconv1 = REBNCONV(out_ch, mid_ch, dirate=1)
-        self.pool1 = MaxPool2D(2, strides=2)
-
-        self.rebnconv2 = REBNCONV(mid_ch, mid_ch, dirate=1)
-        self.pool2 = MaxPool2D(2, strides=2)
-
-        self.rebnconv3 = REBNCONV(mid_ch, mid_ch, dirate=1)
-        self.pool3 = MaxPool2D(2, strides=2)
-
-        self.rebnconv4 = REBNCONV(mid_ch, mid_ch, dirate=1)
-        self.pool4 = MaxPool2D(2, strides=2)
-
-        self.rebnconv5 = REBNCONV(mid_ch, mid_ch, dirate=1)
-
-        self.rebnconv6 = REBNCONV(mid_ch, mid_ch, dirate=2)
-
-        self.rebnconv5d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv4d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv3d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv2d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv1d = REBNCONV(mid_ch*2, out_ch, dirate=1)
-
-    def call(self, rsu6_input, **kwargs):
-
-        hxin = self.rebnconvin(rsu6_input)
-
-        hx1 = self.rebnconv1(hxin)
-        hx = self.pool1(hx1)
-
-        hx2 = self.rebnconv2(hx)
-        hx = self.pool2(hx2)
-
-        hx3 = self.rebnconv3(hx)
-        hx = self.pool3(hx3)
-
-        hx4 = self.rebnconv4(hx)
-        hx = self.pool4(hx4)
-
-        hx5 = self.rebnconv5(hx)
-
-        hx6 = self.rebnconv6(hx5)
-
-
-        hx5d =  self.rebnconv5d(concatenate([hx6, hx5], axis = 3))
-        hx5dup = _upsample_like(hx5d, hx4)
-
-        hx4d = self.rebnconv4d(concatenate([hx5dup, hx4], axis = 3))
-        hx4dup = _upsample_like(hx4d, hx3)
-
-        hx3d = self.rebnconv3d(concatenate([hx4dup, hx3], axis = 3))
-        hx3dup = _upsample_like(hx3d, hx2)
-
-        hx2d = self.rebnconv2d(concatenate([hx3dup, hx2], axis = 3))
-        hx2dup = _upsample_like(hx2d, hx1)
-
-        hx1d = self.rebnconv1d(concatenate([hx2dup, hx1], axis = 3))
-        hx1dup = _upsample_like(hx1d, hxin)
-
-        return hx1dup + hxin
-
-### RSU-5 ###
-class RSU5(Layer):
-
-    def __init__(self, in_ch=3, mid_ch=12, out_ch=3):
-        super(RSU5,self).__init__()
-
-        self.rebnconvin = REBNCONV(in_ch, out_ch, dirate=1)
-
-        self.rebnconv1 = REBNCONV(out_ch, mid_ch, dirate=1)
-        self.pool1 = MaxPool2D(2, strides=2)
-
-        self.rebnconv2 = REBNCONV(mid_ch, mid_ch, dirate=1)
-        self.pool2 = MaxPool2D(2, strides=2)
-
-        self.rebnconv3 = REBNCONV(mid_ch, mid_ch, dirate=1)
-        self.pool3 = MaxPool2D(2, strides=2)
-
-        self.rebnconv4 = REBNCONV(mid_ch, mid_ch, dirate=1)
-
-        self.rebnconv5 = REBNCONV(mid_ch, mid_ch, dirate=2)
-
-        self.rebnconv4d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv3d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv2d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv1d = REBNCONV(mid_ch*2, out_ch, dirate=1)
-
-    def call(self, rsu5_input, **kwargs):
-
-        hxin = self.rebnconvin(rsu5_input)
-
-        hx1 = self.rebnconv1(hxin)
-        hx = self.pool1(hx1)
-
-        hx2 = self.rebnconv2(hx)
-        hx = self.pool2(hx2)
-
-        hx3 = self.rebnconv3(hx)
-        hx = self.pool3(hx3)
-
-        hx4 = self.rebnconv4(hx)
-
-        hx5 = self.rebnconv5(hx4)
-
-        hx4d = self.rebnconv4d(concatenate([hx5, hx4], axis = 3))
-        hx4dup = _upsample_like(hx4d, hx3)
-
-        hx3d = self.rebnconv3d(concatenate([hx4dup, hx3], axis = 3))
-        hx3dup = _upsample_like(hx3d, hx2)
-
-        hx2d = self.rebnconv2d(concatenate([hx3dup, hx2], axis = 3))
-        hx2dup = _upsample_like(hx2d, hx1)
-
-        hx1d = self.rebnconv1d(concatenate([hx2dup, hx1], axis = 3))
-        hx1dup = _upsample_like(hx1d, hxin)
-
-        return hx1dup + hxin
-
-### RSU-4 ###
-class RSU4(Layer):#UNet04DRES(Layer):
-
-    def __init__(self, in_ch=3, mid_ch=12, out_ch=3):
-        super(RSU4,self).__init__()
-
-        self.rebnconvin = REBNCONV(in_ch, out_ch, dirate=1)
-
-        self.rebnconv1 = REBNCONV(out_ch, mid_ch, dirate=1)
-        self.pool1 = MaxPool2D(2, strides=2)
-
-        self.rebnconv2 = REBNCONV(mid_ch, mid_ch, dirate=1)
-        self.pool2 = MaxPool2D(2, strides=2)
-
-        self.rebnconv3 = REBNCONV(mid_ch, mid_ch, dirate=1)
-
-        self.rebnconv4 = REBNCONV(mid_ch, mid_ch, dirate=2)
-
-        self.rebnconv3d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv2d = REBNCONV(mid_ch*2, mid_ch, dirate=1)
-        self.rebnconv1d = REBNCONV(mid_ch*2, out_ch, dirate=1)
-
-    def call(self, rsu4_input, **kwargs):
-
-        hxin = self.rebnconvin(rsu4_input)
-
-        hx1 = self.rebnconv1(hxin)
-        hx = self.pool1(hx1)
-
-        hx2 = self.rebnconv2(hx)
-        hx = self.pool2(hx2)
-
-        hx3 = self.rebnconv3(hx)
-
-        hx4 = self.rebnconv4(hx3)
-
-        hx3d = self.rebnconv3d(concatenate([hx4, hx3], axis = 3))
-        hx3dup = _upsample_like(hx3d, hx2)
-
-        hx2d = self.rebnconv2d(concatenate([hx3dup, hx2], axis = 3))
-        hx2dup = _upsample_like(hx2d, hx1)
-
-        hx1d = self.rebnconv1d(concatenate([hx2dup, hx1], axis = 3))
-        hx1dup = _upsample_like(hx1d, hxin)
-
-        return hx1dup + hxin
-
-### RSU-4F ###
-class RSU4F(Layer):#UNet04FRES(Layer):
-
-    def __init__(self, in_ch=3, mid_ch=12, out_ch=3):
-        super(RSU4F,self).__init__()
-
-        self.rebnconvin = REBNCONV(in_ch, out_ch, dirate=1)
-
-        self.rebnconv1 = REBNCONV(out_ch, mid_ch, dirate=1)
-        self.rebnconv2 = REBNCONV(mid_ch, mid_ch, dirate=2)
-        self.rebnconv3 = REBNCONV(mid_ch, mid_ch, dirate=4)
-
-        self.rebnconv4 = REBNCONV(mid_ch, mid_ch, dirate=8)
-
-        self.rebnconv3d = REBNCONV(mid_ch*2, mid_ch, dirate=4)
-        self.rebnconv2d = REBNCONV(mid_ch*2, mid_ch, dirate=2)
-        self.rebnconv1d = REBNCONV(mid_ch*2, out_ch, dirate=1)
-
-    def call(self, rsu4f_input, **kwargs):
-
-        hxin = self.rebnconvin(rsu4f_input)
-
-        hx1 = self.rebnconv1(hxin)
-        hx2 = self.rebnconv2(hx1)
-        hx3 = self.rebnconv3(hx2)
-
-        hx4 = self.rebnconv4(hx3)
-
-        hx3d = self.rebnconv3d(concatenate([hx4,hx3], axis = 3))
-        hx2d = self.rebnconv2d(concatenate([hx3d,hx2], axis = 3))
-        hx1d = self.rebnconv1d(concatenate([hx2d,hx1], axis = 3))
-
-        hx1dup = _upsample_like(hx1d, hxin)
-
-        return hx1dup + hxin
-
-
-##### U^2-Net ####
-class U2NET(Model):
-
-    def __init__(self,in_ch=3, out_ch=6):
-        super(U2NET,self).__init__()
-
-        self.stage1 = RSU7(in_ch,32,64)
-        self.pool12 = MaxPool2D(2,strides=2)
-
-        self.stage2 = RSU6(64,32,128)
-        self.pool23 = MaxPool2D(2,strides=2)
-
-        self.stage3 = RSU5(128,64,256)
-        self.pool34 = MaxPool2D(2,strides=2)
-
-        self.stage4 = RSU4(256,128,512)
-        self.pool45 = MaxPool2D(2,strides=2)
-
-        self.stage5 = RSU4F(512,256,512)
-        self.pool56 = MaxPool2D(2,strides=2)
-
-        self.stage6 = RSU4F(512,256,512)
-
-        # decoder
-        self.stage5d = RSU4F(1024,256,512)
-        self.stage4d = RSU4(1024,128,256)
-        self.stage3d = RSU5(512,64,128)
-        self.stage2d = RSU6(256,32,64)
-        self.stage1d = RSU7(128,16,64)
-
-        self.side1 = Conv2D(out_ch, 3, padding="same")
-        self.side2 = Conv2D(out_ch, 3, padding="same")
-        self.side3 = Conv2D(out_ch, 3, padding="same")
-        self.side4 = Conv2D(out_ch, 3, padding="same")
-        self.side5 = Conv2D(out_ch, 3, padding="same")
-        self.side6 = Conv2D(out_ch, 3, padding="same")
-
-        self.outconv = Conv2D(out_ch, 1)
-
-    def call(self, u2net_input, **kwargs):
-
-        #stage 1
-        hx1 = self.stage1(u2net_input)
-        hx = self.pool12(hx1)
-
-        #stage 2
-        hx2 = self.stage2(hx)
-        hx = self.pool23(hx2)
-
-        #stage 3
-        hx3 = self.stage3(hx)
-        hx = self.pool34(hx3)
-
-        #stage 4
-        hx4 = self.stage4(hx)
-        hx = self.pool45(hx4)
-
-        #stage 5
-        hx5 = self.stage5(hx)
-        hx = self.pool56(hx5)
-
-        #stage 6
-        hx6 = self.stage6(hx)
-        hx6up = _upsample_like(hx6,hx5)
-
-        #-------------------- decoder --------------------
-        hx5d = self.stage5d(concatenate([hx6up,hx5], axis = 3))
-        hx5dup = _upsample_like(hx5d,hx4)
-
-        hx4d = self.stage4d(concatenate([hx5dup,hx4], axis = 3))
-        hx4dup = _upsample_like(hx4d,hx3)
-
-        hx3d = self.stage3d(concatenate([hx4dup,hx3], axis = 3))
-        hx3dup = _upsample_like(hx3d,hx2)
-
-        hx2d = self.stage2d(concatenate([hx3dup,hx2], axis = 3))
-        hx2dup = _upsample_like(hx2d,hx1)
-
-        hx1d = self.stage1d(concatenate([hx2dup,hx1], axis = 3))
-
-
-        #side output
-        d1 = self.side1(hx1d)
-
-        d2 = self.side2(hx2d)
-        d2 = _upsample_like(d2,d1)
-
-        d3 = self.side3(hx3d)
-        d3 = _upsample_like(d3,d1)
-
-        d4 = self.side4(hx4d)
-        d4 = _upsample_like(d4,d1)
-
-        d5 = self.side5(hx5d)
-        d5 = _upsample_like(d5,d1)
-
-        d6 = self.side6(hx6)
-        d6 = _upsample_like(d6,d1)
-
-        d0 = self.outconv(concatenate([d1,d2,d3,d4,d5,d6], axis = 3))
-
-        return Activation('softmax')(d0)
-        # return Activation('softmax')(d0), Activation('softmax')(d1), Activation('softmax')(d2), Activation('softmax')(d3), Activation('softmax')(d4), Activation('sigmoid')(d5), Activation('sigmoid')(d6)
-
-
-    def summary(self):
-        x = Input(shape=(256, 256, 3))
-        model = Model(inputs=[x], outputs=self.call(x))
-        return model.summary()
-
-
-### U^2-Net small ###
-class U2NETP(Model):
-
-    def __init__(self,in_ch=3, out_ch=6):
-        super(U2NETP,self).__init__()
-
-        self.stage1 = RSU7(in_ch, 16, 64)
-        self.pool12 = MaxPool2D(2, strides=2 )
-
-        self.stage2 = RSU6(64, 16, 64)
-        self.pool23 = MaxPool2D(2, strides=2)
-
-        self.stage3 = RSU5(64, 16, 64)
-        self.pool34 = MaxPool2D(2, strides=2)
-
-        self.stage4 = RSU4(64, 16, 64)
-        self.pool45 = MaxPool2D(2, strides=2)
-
-        self.stage5 = RSU4F(64, 16, 64)
-        self.pool56 = MaxPool2D(2, strides=2)
-
-        self.stage6 = RSU4F(64, 16, 64)
-
-        # decoder
-        self.stage5d = RSU4F(128, 16 ,64)
-        self.stage4d = RSU4(128, 16, 64)
-        self.stage3d = RSU5(128, 16, 64)
-        self.stage2d = RSU6(128, 16, 64)
-        self.stage1d = RSU7(128, 16, 64)
-
-        self.side1 = Conv2D(out_ch, 3, padding="same")
-        self.side2 = Conv2D(out_ch, 3, padding="same")
-        self.side3 = Conv2D(out_ch, 3, padding="same")
-        self.side4 = Conv2D(out_ch, 3, padding="same")
-        self.side5 = Conv2D(out_ch, 3, padding="same")
-        self.side6 = Conv2D(out_ch, 3, padding="same")
-
-        self.outconv = Conv2D(out_ch, 1)
-
-    def call(self, u2netp_input, **kwargs):
-
-        #stage 1
-        hx1 = self.stage1(u2netp_input)
-        hx = self.pool12(hx1)
-
-        #stage 2
-        hx2 = self.stage2(hx)
-        hx = self.pool23(hx2)
-
-        #stage 3
-        hx3 = self.stage3(hx)
-        hx = self.pool34(hx3)
-
-        #stage 4
-        hx4 = self.stage4(hx)
-        hx = self.pool45(hx4)
-
-        #stage 5
-        hx5 = self.stage5(hx)
-        hx = self.pool56(hx5)
-
-        #stage 6
-        hx6 = self.stage6(hx)
-        hx6up = _upsample_like(hx6,hx5)
-
-        #decoder
-        hx5d = self.stage5d(concatenate([hx6up,hx5], axis = 3))
-        hx5dup = _upsample_like(hx5d,hx4)
-
-        hx4d = self.stage4d(concatenate([hx5dup,hx4], axis = 3))
-        hx4dup = _upsample_like(hx4d,hx3)
-
-        hx3d = self.stage3d(concatenate([hx4dup,hx3], axis = 3))
-        hx3dup = _upsample_like(hx3d,hx2)
-
-        hx2d = self.stage2d(concatenate([hx3dup,hx2], axis = 3))
-        hx2dup = _upsample_like(hx2d,hx1)
-
-        hx1d = self.stage1d(concatenate([hx2dup,hx1], axis = 3))
-
-
-        #side output
-        d1 = self.side1(hx1d)
-
-        d2 = self.side2(hx2d)
-        d2 = _upsample_like(d2,d1)
-
-        d3 = self.side3(hx3d)
-        d3 = _upsample_like(d3,d1)
-
-        d4 = self.side4(hx4d)
-        d4 = _upsample_like(d4,d1)
-
-        d5 = self.side5(hx5d)
-        d5 = _upsample_like(d5,d1)
-
-        d6 = self.side6(hx6)
-        d6 = _upsample_like(d6,d1)
-
-        d0 = self.outconv(concatenate([d1, d2, d3, d4, d5, d6], axis = 3))
-
-        return Activation('softmax')(d0)
-
-        # return Activation('softmax')(d0), Activation('softmax')(d1), Activation('softmax')(d2), Activation('softmax')(d3), Activation('softmax')(d4), Activation('softmax')(d5), Activation('softmax')(d6)
-
-    def summary(self):
-        x = Input(shape=(256, 256, 3))
-        model = Model(inputs=[x], outputs=self.call(x))
-        return model.summary()
+# U2Net Model
+# ----------------------------------------------------------------------------------------------
+
+class BatchNorm(BatchNormalization):
+    def call(self, inputs, training = None):
+        return super(self.__class__, self).call(inputs, training = True)
+
+def BN(input_tensor):
+    bn = BatchNorm()(input_tensor)
+    a = Activation('relu')(bn)
+    return a
+
+def basicblocks(input, filter, dilates = 1):
+    x1 = Conv2D(filter, (3, 3), padding = 'same', dilation_rate = 1*dilates)(input)
+    x1 = BN(x1)
+    return x1
+
+def RSU7(input, in_ch = 3, mid_ch = 12, out_ch = 3):
+    hx = input
+    #1
+    hxin = basicblocks(hx, out_ch, 1)
+    hx1 = basicblocks(hxin, mid_ch, 1)
+    hx = keras.layers.MaxPool2D((2, 2), strides = 2)(hx1)
+    #2
+    hx2 = basicblocks(hx, mid_ch, 1)
+    hx = keras.layers.MaxPool2D((2, 2), strides = 2)(hx2)
+    #3
+    hx3 = basicblocks(hx, mid_ch, 1)
+    hx = keras.layers.MaxPool2D((2, 2), strides = 2)(hx3)
+    #4
+    hx4 = basicblocks(hx, mid_ch, 1)
+    hx = keras.layers.MaxPool2D((2, 2), strides = 2)(hx4)
+    #5
+    hx5 = basicblocks(hx, mid_ch, 1)
+    hx = keras.layers.MaxPool2D((2, 2), strides = 2)(hx5)
+    #6
+    hx6 = basicblocks(hx, mid_ch, 1)
+    #7
+    hx7 = basicblocks(hx6, mid_ch, 2)
+
+    #down
+    #6
+    hx6d = Concatenate(axis = -1)([hx7, hx6])
+    hx6d = basicblocks(hx6d, mid_ch, 1)
+    a,b,c,d = K.int_shape(hx5)
+    hx6d=keras.layers.UpSampling2D(size=(2,2))(hx6d)
+
+    #5
+    hx5d = Concatenate(axis=-1)([hx6d, hx5])
+    hx5d = basicblocks(hx5d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx4)
+    hx5d = keras.layers.UpSampling2D(size=(2,2))(hx5d)
+
+    # 4
+    hx4d = Concatenate(axis=-1)([hx5d, hx4])
+    hx4d = basicblocks(hx4d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx3)
+    hx4d = keras.layers.UpSampling2D(size=(2,2))(hx4d)
+
+    # 3
+    hx3d = Concatenate(axis=-1)([hx4d, hx3])
+    hx3d = basicblocks(hx3d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx2)
+    hx3d = keras.layers.UpSampling2D(size=(2,2))(hx3d)
+
+    # 2
+    hx2d = Concatenate(axis=-1)([hx3d, hx2])
+    hx2d = basicblocks(hx2d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx1)
+    hx2d = keras.layers.UpSampling2D(size=(2,2))(hx2d)
+
+    # 1
+    hx1d = Concatenate(axis=-1)([hx2d, hx1])
+    hx1d = basicblocks(hx1d, out_ch, 1)
+
+    #output
+    output=keras.layers.add([hx1d,hxin])
+    return output
+
+def RSU6(input,in_ch=3,mid_ch=12,out_ch=3):
+    hx=input
+    #1
+    hxin=basicblocks(hx,out_ch,1)
+    hx1=basicblocks(hxin,mid_ch,1)
+    hx=keras.layers.MaxPool2D((2,2),strides=2)(hx1)
+    #2
+    hx2=basicblocks(hx,mid_ch,1)
+    hx=keras.layers.MaxPool2D((2,2),strides=2)(hx2)
+    #3
+    hx3 = basicblocks(hx, mid_ch, 1)
+    hx = keras.layers.MaxPool2D((2, 2), strides=2)(hx3)
+    #4
+    hx4=basicblocks(hx,mid_ch,1)
+    hx=keras.layers.MaxPool2D((2,2),strides=2)(hx4)
+    #5
+    hx5 = basicblocks(hx, mid_ch, 1)
+    hx = keras.layers.MaxPool2D((2, 2), strides=2)(hx5)
+    #6
+    hx6=basicblocks(hx,mid_ch,1)
+    hx6=keras.layers.UpSampling2D((2, 2))(hx6)
+
+    #5
+    hx5d = Concatenate(axis=-1)([hx6, hx5])
+    hx5d = basicblocks(hx5d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx4)
+    hx5d = keras.layers.UpSampling2D(size=(2,2))(hx5d)
+
+    # 4
+    hx4d = Concatenate(axis=-1)([hx5d, hx4])
+    hx4d = basicblocks(hx4d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx3)
+    hx4d = keras.layers.UpSampling2D(size=(2,2))(hx4d)
+
+    # 3
+    hx3d = Concatenate(axis=-1)([hx4d, hx3])
+    hx3d = basicblocks(hx3d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx2)
+    hx3d = keras.layers.UpSampling2D(size=(2,2))(hx3d)
+
+    # 2
+    hx2d = Concatenate(axis=-1)([hx3d, hx2])
+    hx2d = basicblocks(hx2d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx1)
+    hx2d = keras.layers.UpSampling2D(size=(2,2))(hx2d)
+
+    # 1
+    hx1d = Concatenate(axis=-1)([hx2d, hx1])
+    hx1d = basicblocks(hx1d, out_ch, 1)
+
+    #output
+    output=keras.layers.add([hx1d,hxin])
+    return output
+
+def RSU5(input,in_ch=3,mid_ch=12,out_ch=3):
+    hx=input
+    #1
+    hxin=basicblocks(hx,out_ch,1)
+    hx1=basicblocks(hxin,mid_ch,1)
+    hx=keras.layers.MaxPool2D((2,2),strides=2)(hx1)
+    #2
+    hx2=basicblocks(hx,mid_ch,1)
+    hx=keras.layers.MaxPool2D((2,2),strides=2)(hx2)
+    #3
+    hx3 = basicblocks(hx, mid_ch, 1)
+    hx = keras.layers.MaxPool2D((2, 2), strides=2)(hx3)
+    #4
+    hx4=basicblocks(hx,mid_ch,1)
+    hx=keras.layers.MaxPool2D((2,2),strides=2)(hx4)
+    #5
+    hx5 = basicblocks(hx, mid_ch, 1)
+    #hx5 = keras.layers.MaxPool2D((2, 2), strides=2)(hx5)
+    hx5 = keras.layers.UpSampling2D((2, 2))(hx5)
+    # 4
+    hx4d = Concatenate(axis=-1)([hx5, hx4])
+    hx4d = basicblocks(hx4d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx3)
+    hx4d = keras.layers.UpSampling2D(size=(2,2))(hx4d)
+
+    # 3
+    hx3d = Concatenate(axis=-1)([hx4d, hx3])
+    hx3d = basicblocks(hx3d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx2)
+    hx3d = keras.layers.UpSampling2D(size=(2,2))(hx3d)
+
+    # 2
+    hx2d = Concatenate(axis=-1)([hx3d, hx2])
+    hx2d = basicblocks(hx2d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx1)
+    hx2d = keras.layers.UpSampling2D(size=(2,2))(hx2d)
+
+    # 1
+    hx1d = Concatenate(axis=-1)([hx2d, hx1])
+    hx1d = basicblocks(hx1d, out_ch, 1)
+
+    #output
+    output=keras.layers.add([hx1d,hxin])
+    return output
+
+def RSU4(input,in_ch=3,mid_ch=12,out_ch=3):
+    hx=input
+    #1
+    hxin=basicblocks(hx,out_ch,1)
+    hx1=basicblocks(hxin,mid_ch,1)
+    hx=keras.layers.MaxPool2D((2,2),strides=2)(hx1)
+    #2
+    hx2=basicblocks(hx,mid_ch,1)
+    hx=keras.layers.MaxPool2D((2,2),strides=2)(hx2)
+    #3
+    hx3 = basicblocks(hx, mid_ch, 1)
+    hx = keras.layers.MaxPool2D((2, 2), strides=2)(hx3)
+    #4
+    hx4=basicblocks(hx,mid_ch,1)
+    hx4=keras.layers.UpSampling2D((2,2))(hx4)
+
+    # 3
+    hx3d = Concatenate(axis=-1)([hx4, hx3])
+    hx3d = basicblocks(hx3d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx2)
+    hx3d = keras.layers.UpSampling2D(size=(2,2))(hx3d)
+
+    # 2
+    hx2d = Concatenate(axis=-1)([hx3d, hx2])
+    hx2d = basicblocks(hx2d, mid_ch, 1)
+    a, b, c, d = K.int_shape(hx1)
+    hx2d = keras.layers.UpSampling2D(size=(2,2))(hx2d)
+
+    # 1
+    hx1d = Concatenate(axis=-1)([hx2d, hx1])
+    hx1d = basicblocks(hx1d, out_ch, 1)
+
+    #output
+    output=keras.layers.add([hx1d,hxin])
+    return output
+
+def RSU4f(input, in_ch = 3, mid_ch = 12, out_ch = 3):
+    hx=input
+    #1
+    hxin = basicblocks(hx, out_ch, 1)
+    hx1 = basicblocks(hxin, mid_ch, 1)
+    #2
+    hx2=basicblocks(hx, mid_ch, 2)
+    #3
+    hx3 = basicblocks(hx, mid_ch, 4)
+    #4
+    hx4=basicblocks(hx, mid_ch, 8)
+
+    # 3
+    hx3d = Concatenate(axis = -1)([hx4, hx3])
+    hx3d = basicblocks(hx3d, mid_ch, 4)
+
+    # 2
+    hx2d = Concatenate(axis = -1)([hx3d, hx2])
+    hx2d = basicblocks(hx2d, mid_ch, 2)
+
+    # 1
+    hx1d = Concatenate(axis = -1)([hx2d, hx1])
+    hx1d = basicblocks(hx1d, out_ch, 1)
+
+    #output
+    output = keras.layers.add([hx1d, hxin])
+    return output
+
+
+def u2net(img_height = 256, img_width = 256, in_channels = 3, in_ch = 3, num_classes = 6):
+
+    input = Input((img_height, img_width, in_channels))
+
+    stage1 = RSU7(input, in_ch = 3, mid_ch = 32, out_ch = 64)
+    stage1p = keras.layers.MaxPool2D((2,2), strides = 2)(stage1)
+
+    stage2 = RSU6(stage1p, in_ch = 64, mid_ch = 32, out_ch = 128)
+    stage2p = keras.layers.MaxPool2D((2, 2), strides = 2)(stage2)
+
+    stage3 = RSU5(stage2p, in_ch = 128, mid_ch = 64, out_ch = 256)
+    stage3p = keras.layers.MaxPool2D((2, 2), strides = 2)(stage3)
+
+    stage4 = RSU4(stage3p, in_ch = 256, mid_ch = 128, out_ch = 512)
+    stage4p = keras.layers.MaxPool2D((2, 2), strides = 2)(stage4)
+
+    stage5 = RSU4f(stage4p, in_ch = 512, mid_ch = 256, out_ch = 512)
+    stage5p = keras.layers.MaxPool2D((2, 2), strides = 2)(stage5)
+
+    stage6 = RSU4f(stage5, in_ch = 512, mid_ch = 256, out_ch = 512)
+    stage6u = keras.layers.UpSampling2D((1, 1))(stage6)
+
+    #decoder
+    stage6a = Concatenate(axis = -1)([stage6u,stage5])
+    stage5d = RSU4f(stage6a, 1024, 256, 512)
+    stage5du = keras.layers.UpSampling2D((2, 2))(stage5d)
+
+    stage5a = Concatenate(axis = -1)([stage5du, stage4])
+    stage4d = RSU4(stage5a, 1024, 128, 256)
+    stage4du = keras.layers.UpSampling2D((2, 2))(stage4d)
+
+    stage4a = Concatenate(axis = -1)([stage4du, stage3])
+    stage3d = RSU5(stage4a, 512, 64, 128)
+    stage3du = keras.layers.UpSampling2D((2, 2))(stage3d)
+
+    stage3a = Concatenate(axis = -1)([stage3du, stage2])
+    stage2d = RSU6(stage3a, 256, 32, 64)
+    stage2du = keras.layers.UpSampling2D((2, 2))(stage2d)
+
+    stage2a = Concatenate(axis = -1)([stage2du, stage1])
+    stage1d = RSU6(stage2a, 128, 16, 64)
+
+    #side output
+    side1 = Conv2D(num_classes, (3, 3), padding = 'same', name = 'side1')(stage1d)
+    side2 = Conv2D(num_classes, (3, 3), padding = 'same')(stage2d)
+    side2 = keras.layers.UpSampling2D((2, 2), name = 'side2')(side2)
+    side3 = Conv2D(num_classes, (3, 3), padding = 'same')(stage3d)
+    side3 = keras.layers.UpSampling2D((4, 4), name = 'side3')(side3)
+    side4 = Conv2D(num_classes, (3, 3), padding = 'same')(stage4d)
+    side4 = keras.layers.UpSampling2D((8, 8), name = 'side4')(side4)
+    side5 = Conv2D(num_classes, (3, 3), padding = 'same')(stage5d)
+    side5 = keras.layers.UpSampling2D((16, 16), name = 'side5')(side5)
+    side6 = Conv2D(num_classes, (3, 3), padding = 'same')(stage6)
+    side6 = keras.layers.UpSampling2D((16, 16), name = 'side6')(side6)
+
+    out = Concatenate(axis = -1)([side1, side2, side3, side4, side5, side6])
+    out = Conv2D(num_classes, (1, 1), padding = 'same', name = 'out')(out)
+
+    # model = Model(inputs = [input], outputs = [side1, side2, side3, side4, side5, side6, out])
+    model = Model(inputs = [input], outputs = [out])
     
+    return model
     
 
 
 # DnCNN Model
+# ----------------------------------------------------------------------------------------------
 
-def DnCNN():
+def DnCNN(num_classes = 6, img_height = 256, img_width = 256, in_channels = 3):
     
-    inpt = Input(shape=(256,256,3))
+    inpt = Input(shape=(img_height, img_width, in_channels))
     # 1st layer, Conv+relu
     x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='same')(inpt)
     x = Activation('relu')(x)
@@ -719,7 +488,7 @@ def DnCNN():
         x = BatchNormalization(axis=-1, epsilon=1e-3)(x)
         x = Activation('relu')(x)   
     # last layer, Conv
-    x = Conv2D(6, (1, 1), activation='softmax')(x)
+    x = Conv2D(num_classes, (1, 1), activation='softmax')(x)
     # x = Conv2D(filters=6, kernel_size=(3,3), strides=(1,1), padding='same')(x)
     # x = tf.keras.layers.Subtract()([inpt, x])   # input - noise
     model = Model(inputs=inpt, outputs=x)
@@ -729,6 +498,6 @@ def DnCNN():
 
 if __name__ == '__main__':
     
-    model = multi_unet_model()
+    model = u2net()
     model.summary()
     

@@ -6,33 +6,19 @@ from dataset import *
 from tensorflow import keras
 from tensorflow.keras.callbacks import ModelCheckpoint,TensorBoard
 from datetime import datetime
-
-
-# GPU Selection
-# ----------------------------------------------------------------------------------------------
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]= "0"
-
-
-# Hyperparameters
-# ----------------------------------------------------------------------------------------------
-epochs = 10000
-batch_size = 4
-learning_rate = 3e-4
+from config import *
 
 
 # Model
 # ----------------------------------------------------------------------------------------------
-model_name = "dncnn"
-
 if(model_name == 'unet'):
-    model = unet()
+    model = unet(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
 if(model_name == 'mod-unet'):
-    model = mod_unet()
+    model = mod_unet(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
 elif(model_name == 'dncnn'):
-    model = DnCNN()
+    model = DnCNN(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
 elif(model_name == 'u2net'):
-    model = U2NET()
+    model = U2NET(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
   
     
 # Metrices
@@ -52,27 +38,35 @@ model.compile(optimizer = adam, loss = focal_loss(), metrics = metrics)
 
 # checkpoint
 # ----------------------------------------------------------------------------------------------
-checkpoint= ModelCheckpoint(
-    "/home/mdsamiul/InSAR-Coding/semantic_segmentation/dubai_satellite_image/model/epochs_{}".format(epochs) + "_{}".format(model_name)+ "_" + datetime.now().strftime("%d-%b-%y_%-I:%M:%S_%p" + ".hdf5"),
-    save_best_only = True)
+checkpoint = ModelCheckpoint(os.path.join(checkpoint_dir, checkpoint_name), save_best_only = True)
 
 
 # Tensorbord Logger
 # ----------------------------------------------------------------------------------------------
-logdir = "/home/mdsamiul/InSAR-Coding/semantic_segmentation/dubai_satellite_image/logs/{}".format(model_name) + "_epochs_{}_".format(epochs) + datetime.now().strftime("%d-%b-%y_%-I:%M:%S_%p")
-tensorboard_callback = keras.callbacks.TensorBoard(log_dir = logdir)
+tensorboard_callback = keras.callbacks.TensorBoard(log_dir = os.path.join(tensorboard_log_dir, tensorboard_log_name))
 
 
 # CSV Logger
 # ----------------------------------------------------------------------------------------------
-csv_logger = tf.keras.callbacks.CSVLogger("/home/mdsamiul/InSAR-Coding/semantic_segmentation/dubai_satellite_image/csv_logger/{}".format(model_name) + "_epochs_{}_".format(epochs) + datetime.now().strftime("%d-%b-%y_%-I:%M:%S_%p" + ".csv"), 
-                                          separator = ",", 
-                                          append = False)
+csv_logger = tf.keras.callbacks.CSVLogger(os.path.join(csv_log_dir, csv_log_name), separator = ",", append = False)
 
 
 # Early Stopping
 # ----------------------------------------------------------------------------------------------
-# early_stopping = tf.keras.callbacks.EarlyStopping(monitor='acc', patience=500)
+# early_stopping = tf.keras.callbacks.EarlyStopping(monitor = 'acc', patience = patience)
+
+
+# Learning Rate Scheduler
+# ----------------------------------------------------------------------------------------------
+"""learning rate decrease according to the model performance"""
+def lr_scheduler(epoch):
+    drop = 0.5
+    epoch_drop = epochs / 8.
+    lr = base_lr * math.pow(drop, math.floor((1 + epoch) / epoch_drop))
+    print('lr: %f' % lr)
+    return lr
+
+lr_decay = tf.keras.callbacks.LearningRateScheduler(schedule = lr_scheduler)
 
 
 # Prediction on Epoch
@@ -147,6 +141,6 @@ history = model.fit(x_train, y_train,
                     epochs = epochs,
                     validation_data = (x_test, y_test), 
                     shuffle = False,
-                    # callbacks = [checkpoint, tensorboard_callback, csv_logger, early_stopping] # early_stopping included
-                    callbacks = [checkpoint, tensorboard_callback, csv_logger]
+                    # callbacks = [checkpoint, tensorboard_callback, csv_logger, early_stopping, lr_decay] # early_stopping included
+                    callbacks = [checkpoint, tensorboard_callback, csv_logger, lr_decay]
                     )
