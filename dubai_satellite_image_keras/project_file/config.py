@@ -21,8 +21,8 @@ num_classes = 6
 
 # Training
 # ----------------------------------------------------------------------------------------------
-batch_size = 3
-epochs = 10000
+batch_size = 1
+epochs = 1
 learning_rate = 3e-4
 model_name = "dncnn" # unet/mod-unet/dncnn/u2net
 
@@ -31,6 +31,9 @@ model_name = "dncnn" # unet/mod-unet/dncnn/u2net
 # ----------------------------------------------------------------------------------------------
 patch_size = height # height = width, anyone is suitable
 dataset_dir = "/home/mdsamiul/semantic-segmentation/data/Aerial_Image"
+train_size = 0.8 
+# valid_size = automatically set to 0.1
+# test_size = automatically set to 0.1
 
 
 # Logger/Callbacks
@@ -54,4 +57,4 @@ load_model_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_ker
 
 test_img_number = 105
 prediction_img_name = "test_img_{}".format(test_img_number)
-prediction_path = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/".format(model_name)
+prediction_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/".format(model_name)

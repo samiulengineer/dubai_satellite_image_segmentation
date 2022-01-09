@@ -13,6 +13,8 @@ from tensorflow.keras.utils import to_categorical
 import os 
 from sklearn.model_selection import train_test_split
 from config import *
+from fast_ml.model_development import train_valid_test_split
+
 
 
 
@@ -80,7 +82,7 @@ for path, subdirs, files in os.walk(dataset_dir, topdown=True):
     
                 #Extract patches from each image
                 print("Now patchifying mask:", path+"/"+mask_name)
-                patches_mask = patchify(mask, (patch_size, patch_size, 3), step=patch_size)  #Step=256 for 256 patches means no overlap
+                patches_mask = patchify(mask, (patch_size, patch_size, 3), step = patch_size)  #Step=256 for 256 patches means no overlap
         
                 for i in range(patches_mask.shape[0]):
                     for j in range(patches_mask.shape[1]):
@@ -146,29 +148,40 @@ labels_cat = to_categorical(labels, num_classes=n_classes)
 
 
 # Input data Splitting
+# ----------------------------------------------------------------------------------------------
 def data_split():
-    x_train, x_test, y_train, y_test = train_test_split(image_dataset, labels_cat, test_size = 0.20, random_state = 42)
-    return x_train, x_test, y_train, y_test
+    x_train, x_rem, y_train, y_rem = train_test_split(image_dataset, labels_cat, train_size = train_size)
+    x_valid, x_test, y_valid, y_test = train_test_split(x_rem, y_rem, test_size = 0.5)
+    return x_train, y_train, x_valid, y_valid, x_test, y_test
 
-x_train, x_test, y_train, y_test = data_split()
+x_train, y_train, x_valid, y_valid, x_test, y_test = data_split()
+
+
 
 
 if __name__ == '__main__':
     
-    # image_dataset = np.array(image_dataset)
-    # np.save("/home/mdsamiul/InSAR-Coding/Data/Aerial_Image/image_dataset",image_dataset)
     # mask_dataset =  np.array(mask_dataset)
-    # np.save("/home/mdsamiul/InSAR-Coding/Data/Aerial_Image/mask_dataset",mask_dataset)
-    # image_dataset=np.load("/home/mdsamiul/InSAR-Coding/Data/Aerial_Image/image_dataset.npy")
-    # mask_dataset=np.load("/home/mdsamiul/InSAR-Coding/Data/Aerial_Image/mask_dataset.npy")
+    # image_dataset = np.array(image_dataset)
+
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",x_train)
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",x_valid)
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",x_test)
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",y_train)
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",y_valid)
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",y_test)
+
+    # x_train = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/x_train.npy")
     
     print("Total number of images : {}".format(len(image_dataset)))
     print("Total number of masks : {}".format(len(mask_dataset)))
     
     print("x_train shape : {}".format(x_train.shape))
-    print("y_train shape : {}".format(y_train.shape))
-    
+    print("x_valid shape : {}".format(x_valid.shape))
     print("x_test shape : {}".format(x_test.shape))
+    
+    print("y_train shape : {}".format(y_train.shape))
+    print("y_valid shape : {}".format(y_valid.shape))
     print("y_test shape : {}".format(y_test.shape))
     
     print(labels_cat.shape) # all 6 classes

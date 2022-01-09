@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix
 import tensorflow as tf
 from tensorflow import keras
 from matplotlib import pyplot as plt
-from dataset import data_split
+from dataset import *
 from tensorflow.keras.models import load_model
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,11 +18,6 @@ from config import *
 # Load Model
 # ----------------------------------------------------------------------------------------------
 model = load_model(os.path.join(load_model_dir, load_model_name), compile = False)
-
-
-# Test Dataset Split
-# ----------------------------------------------------------------------------------------------
-x_train, x_test, y_train, y_test = data_split()
 
 
 # Prediction on Test Dataset
@@ -53,7 +48,7 @@ predicted_img = np.argmax(prediction, axis = 3)[0,:,:]
 # ----------------------------------------------------------------------------------------------
 metrics = ['acc',jacard_coef,precision_m,recall_m,f1_m,iou_coef,dice_coef,subset_accuracy,cat_acc]
 model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
-model.evaluate(x_test,y_test)
+model.evaluate(x_test, y_test)
 
 
 # Confusion Matrix
@@ -63,7 +58,7 @@ cm = confusion_matrix(y_test_argmax.flatten(), y_pred_argmax.flatten())
 
 if __name__ == '__main__':
     
-    # Plot Random Predicted Image
+    # Plot Predicted Image
     # ------------------------------------------------------------------------------------------
     plt.figure(figsize=(12, 8))
     plt.subplot(231)
@@ -75,7 +70,7 @@ if __name__ == '__main__':
     plt.subplot(233)
     plt.title('Prediction on test image')
     plt.imshow(predicted_img)
-    plt.savefig(os.path.join(prediction_path, prediction_img_name))
+    plt.savefig(os.path.join(prediction_dir, prediction_img_name))
     
     
     # Plot Confusion Matrix

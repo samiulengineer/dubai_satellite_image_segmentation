@@ -6,18 +6,15 @@ from tensorflow.keras import backend as K
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.layers import Conv2D, ReLU, Concatenate, Activation, MaxPool2D, Lambda
-tf.config.experimental_run_functions_eagerly(True)
-
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]= "2"
+from config import *
 
 
 # UNET Model
 # ----------------------------------------------------------------------------------------------
 
-def unet(num_classes = 6, img_height = 256, img_width = 256, in_channels = 3):
+def unet(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels):
     
-    inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+    inputs = Input((img_height, img_width, in_channels))
  
     #Contraction path
     c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
@@ -69,7 +66,7 @@ def unet(num_classes = 6, img_height = 256, img_width = 256, in_channels = 3):
     c9 = Dropout(0.2)(c9)  # Original 0.1
     c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
      
-    outputs = Conv2D(n_classes, (1, 1), activation='softmax')(c9)
+    outputs = Conv2D(num_classes, (1, 1), activation='softmax')(c9)
      
     model = Model(inputs=[inputs], outputs=[outputs])
     
@@ -80,9 +77,9 @@ def unet(num_classes = 6, img_height = 256, img_width = 256, in_channels = 3):
 # Modification UNET Model
 # ----------------------------------------------------------------------------------------------
 
-def mod_unet(num_classes = 6, img_height = 256, img_width = 256, in_channels = 3):
+def mod_unet(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels):
     
-    inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+    inputs = Input((img_height, img_width, in_channels))
     
     #Contraction path
     c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
@@ -157,7 +154,7 @@ def mod_unet(num_classes = 6, img_height = 256, img_width = 256, in_channels = 3
     c13 = Dropout(0.2)(c13)  # Original 0.1
     c13 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c13)
      
-    outputs = Conv2D(n_classes, (1, 1), activation='softmax')(c13)
+    outputs = Conv2D(num_classes, (1, 1), activation='softmax')(c13)
      
     model = Model(inputs=[inputs], outputs=[outputs])
     
@@ -408,7 +405,7 @@ def RSU4f(input, in_ch = 3, mid_ch = 12, out_ch = 3):
     return output
 
 
-def u2net(img_height = 256, img_width = 256, in_channels = 3, in_ch = 3, num_classes = 6):
+def u2net(img_height = height, img_width = width, in_channels = in_channels, num_classes = num_classes):
 
     input = Input((img_height, img_width, in_channels))
 
@@ -476,7 +473,7 @@ def u2net(img_height = 256, img_width = 256, in_channels = 3, in_ch = 3, num_cla
 # DnCNN Model
 # ----------------------------------------------------------------------------------------------
 
-def DnCNN(num_classes = 6, img_height = 256, img_width = 256, in_channels = 3):
+def DnCNN(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels):
     
     inpt = Input(shape=(img_height, img_width, in_channels))
     # 1st layer, Conv+relu

@@ -7,6 +7,7 @@ from tensorflow import keras
 from tensorflow.keras.callbacks import ModelCheckpoint,TensorBoard
 from datetime import datetime
 from config import *
+import math
 
 
 # Model
@@ -18,7 +19,7 @@ if(model_name == 'mod-unet'):
 elif(model_name == 'dncnn'):
     model = DnCNN(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
 elif(model_name == 'u2net'):
-    model = U2NET(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
+    model = u2net(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
   
     
 # Metrices
@@ -62,8 +63,7 @@ csv_logger = tf.keras.callbacks.CSVLogger(os.path.join(csv_log_dir, csv_log_name
 def lr_scheduler(epoch):
     drop = 0.5
     epoch_drop = epochs / 8.
-    lr = base_lr * math.pow(drop, math.floor((1 + epoch) / epoch_drop))
-    print('lr: %f' % lr)
+    lr = learning_rate * math.pow(drop, math.floor((1 + epoch) / epoch_drop))
     return lr
 
 lr_decay = tf.keras.callbacks.LearningRateScheduler(schedule = lr_scheduler)
@@ -139,7 +139,7 @@ history = model.fit(x_train, y_train,
                     batch_size = batch_size, 
                     verbose = 1, 
                     epochs = epochs,
-                    validation_data = (x_test, y_test), 
+                    validation_data = (x_valid, y_valid), 
                     shuffle = False,
                     # callbacks = [checkpoint, tensorboard_callback, csv_logger, early_stopping, lr_decay] # early_stopping included
                     callbacks = [checkpoint, tensorboard_callback, csv_logger, lr_decay]
