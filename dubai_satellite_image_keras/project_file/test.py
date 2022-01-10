@@ -5,7 +5,6 @@ from sklearn.metrics import confusion_matrix
 import tensorflow as tf
 from tensorflow import keras
 from matplotlib import pyplot as plt
-from dataset import *
 from tensorflow.keras.models import load_model
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,6 +12,15 @@ import itertools
 from metrics import plot_confusion_matrix, jacard_coef, precision_m, recall_m, f1_m, iou_coef, dice_coef, subset_accuracy, cat_acc
 from loss import focal_loss
 from config import *
+
+
+# Dataset
+# ----------------------------------------------------------------------------------------------
+if (preprocessed_dataset == True):
+    x_test = np.load(x_test_dir)
+    y_test = np.load(y_test_dir)
+else:
+    from dataset import *
 
 
 # Load Model

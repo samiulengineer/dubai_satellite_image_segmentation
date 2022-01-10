@@ -163,15 +163,27 @@ if __name__ == '__main__':
     
     # mask_dataset =  np.array(mask_dataset)
     # image_dataset = np.array(image_dataset)
+    
+    """save training, validation and test data and labels separately,
+       It will save time to load the original data everytime,
+       model can run directly from the saved dataset,
+       when the data preprocessing changes, we need to save the preprocessed data again
+    """
 
-    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",x_train)
-    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",x_valid)
-    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",x_test)
-    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",y_train)
-    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",y_valid)
-    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image",y_test)
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_train.npy", x_train)
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_valid.npy", x_valid)
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_test.npy", x_test)
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_train.npy", y_train)
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_valid.npy", y_valid)
+    # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_test.npy", y_test)
 
-    # x_train = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/x_train.npy")
+    # x_train = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_train.npy")
+    # x_valid = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_valid.npy")
+    # x_test = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_test.npy")
+    # y_train = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_train.npy")
+    # y_valid = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_valid.npy")
+    # y_test = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_test.npy")
+    
     
     print("Total number of images : {}".format(len(image_dataset)))
     print("Total number of masks : {}".format(len(mask_dataset)))
@@ -194,8 +206,9 @@ if __name__ == '__main__':
     plt.imshow(np.reshape(mask_dataset[image_number], (patch_size, patch_size, 3)))
     plt.show()
     
+   
     
-    print("Unique labels in label dataset are: ", np.unique(labels))
+    print("Unique labels in label dataset are: ", np.unique(label))
 
     image_number = random.randint(0, len(image_dataset))
     plt.figure(figsize=(12, 6))

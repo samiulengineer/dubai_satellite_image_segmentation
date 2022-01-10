@@ -2,6 +2,8 @@
 
 from datetime import datetime
 import os
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
 
 
 
@@ -9,6 +11,10 @@ import os
 # ----------------------------------------------------------------------------------------------
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]= "2"
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+# config = ConfigProto()
+# config.gpu_options.allow_growth = True
+# session = InteractiveSession(config = config)
 
 
 # Image Input/Output
@@ -22,9 +28,9 @@ num_classes = 6
 # Training
 # ----------------------------------------------------------------------------------------------
 batch_size = 1
-epochs = 1
+epochs = 10000
 learning_rate = 3e-4
-model_name = "dncnn" # unet/mod-unet/dncnn/u2net
+model_name = "u2net" # unet/mod-unet/dncnn/u2net
 
 
 # Dataset
@@ -32,9 +38,23 @@ model_name = "dncnn" # unet/mod-unet/dncnn/u2net
 patch_size = height # height = width, anyone is suitable
 dataset_dir = "/home/mdsamiul/semantic-segmentation/data/Aerial_Image"
 train_size = 0.8 
-# valid_size = automatically set to 0.1
-# test_size = automatically set to 0.1
+# valid_size = automatically set to 0.1 for 0.8 train_size
+# test_size = automatically set to 0.1  for 0.8 train_size
 
+# Dataset
+# ----------------------------------------------------------------------------------------------
+"""Preprocessed dataset will save time because we do not need data preprocessing everytime
+   prepreocessed data in npy files will not be uploaded in github
+   for github user preprocessed_dataset will be False
+"""
+preprocessed_dataset = True
+x_train_dir = "/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_train.npy"
+x_valid_dir = "/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_valid.npy"
+x_test_dir = "/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_test.npy"
+y_train_dir = "/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_train.npy"
+y_valid_dir = "/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_valid.npy"
+y_test_dir = "/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_test.npy"
+    
 
 # Logger/Callbacks
 # ----------------------------------------------------------------------------------------------

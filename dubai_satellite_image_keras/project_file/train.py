@@ -2,7 +2,6 @@ import os
 from metrics import *
 from model import *
 from loss import *
-from dataset import *
 from tensorflow import keras
 from tensorflow.keras.callbacks import ModelCheckpoint,TensorBoard
 from datetime import datetime
@@ -10,11 +9,22 @@ from config import *
 import math
 
 
+# Dataset
+# ----------------------------------------------------------------------------------------------
+if (preprocessed_dataset == True):
+    x_train = np.load(x_train_dir)
+    x_valid = np.load(x_valid_dir)
+    y_train = np.load(y_train_dir)
+    y_valid = np.load(y_valid_dir)
+else:
+    from dataset import *
+    
+
 # Model
 # ----------------------------------------------------------------------------------------------
 if(model_name == 'unet'):
     model = unet(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
-if(model_name == 'mod-unet'):
+elif(model_name == 'mod-unet'):
     model = mod_unet(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
 elif(model_name == 'dncnn'):
     model = DnCNN(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
