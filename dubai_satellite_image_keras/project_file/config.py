@@ -22,10 +22,10 @@ num_classes = 6
 
 # Training
 # ----------------------------------------------------------------------------------------------
-batch_size = 4
-epochs = 100000
+batch_size = 1
+epochs = 10000
 learning_rate = 3e-4
-model_name = "mod-unet" # unet/mod-unet/dncnn/u2net
+model_name = "u2net" # unet/mod-unet/dncnn/u2net
 
 
 # Dataset
@@ -67,6 +67,4 @@ patience = 500 # required for early_stopping, if accuracy does not change for 50
 load_model_name = "epochs_100000_mod-unet_07-Dec-21.hdf5"
 load_model_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/model/{}/".format(model_name)
 
-test_img_index = 110
-prediction_img_name = "test_img_{}".format(test_img_index)
 prediction_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/".format(model_name)

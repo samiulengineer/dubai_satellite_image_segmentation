@@ -7,14 +7,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 
+        
+      
+def jacard_coef(y_true, y_pred, smooth = 100):
+    intersection = K.sum(K.abs(y_true * y_pred), axis = -1)
+    sum_ = K.sum(K.abs(y_true) + K.abs(y_pred), axis = -1)
+    jac = (intersection + smooth) / (sum_ - intersection + smooth)
+    return (1 - jac) * smooth
 
-
-
-def jacard_coef(y_true, y_pred):
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    return (intersection + 1.0) / (K.sum(y_true_f) + K.sum(y_pred_f) - intersection + 1.0)
+# def jacard_coef(y_true, y_pred):
+#     y_true_f = K.flatten(y_true)
+#     y_pred_f = K.flatten(y_pred)
+#     intersection = K.sum(y_true_f * y_pred_f)
+#     return (intersection + 1.0) / (K.sum(y_true_f) + K.sum(y_pred_f) - intersection + 1.0)
 
 def recall_m(y_true, y_pred):
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
