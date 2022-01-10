@@ -2,19 +2,14 @@
 
 from datetime import datetime
 import os
-from tensorflow.compat.v1 import ConfigProto
-from tensorflow.compat.v1 import InteractiveSession
 
 
 
 # GPU Selection
 # ----------------------------------------------------------------------------------------------
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]= "2"
+os.environ["CUDA_VISIBLE_DEVICES"]= "4"
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
-# config = ConfigProto()
-# config.gpu_options.allow_growth = True
-# session = InteractiveSession(config = config)
 
 
 # Image Input/Output
@@ -27,10 +22,10 @@ num_classes = 6
 
 # Training
 # ----------------------------------------------------------------------------------------------
-batch_size = 1
-epochs = 10000
+batch_size = 4
+epochs = 100000
 learning_rate = 3e-4
-model_name = "u2net" # unet/mod-unet/dncnn/u2net
+model_name = "mod-unet" # unet/mod-unet/dncnn/u2net
 
 
 # Dataset
@@ -43,11 +38,8 @@ train_size = 0.8
 
 # Dataset
 # ----------------------------------------------------------------------------------------------
-"""Preprocessed dataset will save time because we do not need data preprocessing everytime
-   prepreocessed data in npy files will not be uploaded in github
-   for github user preprocessed_dataset will be False
-"""
-preprocessed_dataset = True
+"""Preprocessed dataset will save time because we do not need data preprocessing everytime"""
+
 x_train_dir = "/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_train.npy"
 x_valid_dir = "/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_valid.npy"
 x_test_dir = "/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_test.npy"
@@ -72,9 +64,9 @@ patience = 500 # required for early_stopping, if accuracy does not change for 50
 
 # Evaluation
 # ----------------------------------------------------------------------------------------------
-load_model_name = "epochs_10000_dncnn_02-Jan-22.hdf5"
+load_model_name = "epochs_100000_mod-unet_07-Dec-21.hdf5"
 load_model_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/model/{}/".format(model_name)
 
-test_img_number = 105
-prediction_img_name = "test_img_{}".format(test_img_number)
+test_img_index = 110
+prediction_img_name = "test_img_{}".format(test_img_index)
 prediction_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/".format(model_name)

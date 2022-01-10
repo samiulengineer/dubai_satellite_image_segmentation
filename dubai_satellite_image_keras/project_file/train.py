@@ -9,9 +9,17 @@ from config import *
 import math
 
 
+# Print Experimental Setup before Training
+# ----------------------------------------------------------------------------------------------
+print("Model = {}".format(model_name))
+print("Epochs = {}".format(epochs))
+print("Batch Size = {}".format(batch_size))
+print("Preprocessed Data = {}".format(os.path.exists(x_train_dir)))
+
+
 # Dataset
 # ----------------------------------------------------------------------------------------------
-if (preprocessed_dataset == True):
+if (os.path.exists(x_train_dir)):
     x_train = np.load(x_train_dir)
     x_valid = np.load(x_valid_dir)
     y_train = np.load(y_train_dir)

@@ -14,9 +14,15 @@ from loss import focal_loss
 from config import *
 
 
+# Print Experimental Setup before Training
+# ----------------------------------------------------------------------------------------------
+print("Load Model = {}".format(load_model_name))
+print("Preprocessed Data = {}".format(os.path.exists(x_test_dir)))
+
+
 # Dataset
 # ----------------------------------------------------------------------------------------------
-if (preprocessed_dataset == True):
+if (os.path.exists(x_test_dir)):
     x_test = np.load(x_test_dir)
     y_test = np.load(y_test_dir)
 else:
@@ -41,7 +47,7 @@ y_pred_argmax = np.argmax(y_pred, axis = 3)
 """used for plot the prediction images"""
 y_test_argmax = np.argmax(y_test, axis = 3)
 # test_img_number = random.randint(0, len(x_test)) # taking a random index test image for testing
-test_img_number = test_img_number # taking a fixed index test image for testing
+test_img_number = test_img_index # taking a fixed index test image for testing
 ground_truth = y_test_argmax[test_img_number]
 
 # test_img_norm = test_img[:,:,0][:,:,None]
@@ -63,28 +69,24 @@ model.evaluate(x_test, y_test)
 # ----------------------------------------------------------------------------------------------
 cm = confusion_matrix(y_test_argmax.flatten(), y_pred_argmax.flatten())
 
+plot_confusion_matrix(cm,
+                    normalize = False,
+                    target_names = ['Building', 'Land', 'Road', 'Vegetation', 'Water', 'Unlabeled'],
+                    title = "Confusion Matrix")
 
-if __name__ == '__main__':
-    
-    # Plot Predicted Image
-    # ------------------------------------------------------------------------------------------
-    plt.figure(figsize=(12, 8))
-    plt.subplot(231)
-    plt.title('Testing Image')
-    plt.imshow(test_img)
-    plt.subplot(232)
-    plt.title('Testing Label')
-    plt.imshow(ground_truth)
-    plt.subplot(233)
-    plt.title('Prediction on test image')
-    plt.imshow(predicted_img)
-    plt.savefig(os.path.join(prediction_dir, prediction_img_name))
-    
-    
-    # Plot Confusion Matrix
-    # ----------------------------------------------------------------------------------------------
-        
-    plot_confusion_matrix(cm,
-                          normalize = False,
-                          target_names = ['Building', 'Land', 'Road', 'Vegetation', 'Water', 'Unlabeled'],
-                          title = "Confusion Matrix")
+
+  
+# Plot Predicted Image
+# ------------------------------------------------------------------------------------------
+plt.figure(figsize=(12, 8))
+plt.subplot(231)
+plt.title('Testing Image')
+plt.imshow(test_img)
+plt.subplot(232)
+plt.title('Testing Label')
+plt.imshow(ground_truth)
+plt.subplot(233)
+plt.title('Prediction on test image')
+plt.imshow(predicted_img)
+plt.tight_layout()
+plt.savefig(os.path.join(prediction_dir, prediction_img_name))
