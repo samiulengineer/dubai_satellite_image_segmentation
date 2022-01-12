@@ -36,7 +36,12 @@ model = load_model(os.path.join(load_model_dir, load_model_name), compile = Fals
 
 # Prediction on Test Dataset
 # ----------------------------------------------------------------------------------------------
-for num in range(len(x_test)):
+# for num in range(len(x_test)):
+for num in range(15):
+    metrics = ['acc']
+    model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
+    eval = model.evaluate(x_test[num:num+1], y_test[num:num+1])
+    
     test_img = x_test[num]
 
     y_test_argmax = np.argmax(y_test, axis = 3)
@@ -49,30 +54,32 @@ for num in range(len(x_test)):
     plt.figure(figsize=(12, 8))
     
     plt.subplot(231)
-    plt.title('Testing Image')
+    plt.title("Feature")
     plt.imshow(test_img)
     
     plt.subplot(232)
-    plt.title('Testing Label')
+    plt.title("Mask")
     plt.imshow(ground_truth)
     
     plt.subplot(233)
-    plt.title('Prediction on test image')
+    plt.title("Prediction (Accuracy_{})".format(round(eval[1], 4)))
     plt.imshow(predicted_img)
     plt.tight_layout()
     
-    plt.savefig(os.path.join(prediction_dir, "test_img_{}".format(num)), bbox_inches='tight')
-
-
-
-# Model Evaluation on Test Dataset
-# ----------------------------------------------------------------------------------------------
-eval = []
-for num in range(len(x_test)):
-    metrics = ['acc',jacard_coef,precision_m,recall_m,f1_m,iou_coef,dice_coef,subset_accuracy,cat_acc]
+    metrics = ['acc']
     model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
     eval = model.evaluate(x_test[num:num+1], y_test[num:num+1])
-    print (eval)
+    
+    plt.savefig(os.path.join(prediction_dir, "test_img_{}_acc_{}.png".format(num, round(eval[1], 4))), bbox_inches='tight')
+
+
+
+# Average Metrics Score on Test Dataset
+# ----------------------------------------------------------------------------------------------
+metrics = ['acc',jacard_coef,precision_m,recall_m,f1_m,iou_coef,dice_coef,subset_accuracy,cat_acc]
+model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
+eval = model.evaluate(x_test, y_test)
+
 
 # Confusion Matrix
 # ----------------------------------------------------------------------------------------------

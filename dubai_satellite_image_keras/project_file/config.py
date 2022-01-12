@@ -8,7 +8,7 @@ import os
 # GPU Selection
 # ----------------------------------------------------------------------------------------------
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]= "4"
+os.environ["CUDA_VISIBLE_DEVICES"]= "6"
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 
@@ -64,7 +64,7 @@ patience = 500 # required for early_stopping, if accuracy does not change for 50
 
 # Evaluation
 # ----------------------------------------------------------------------------------------------
-load_model_name = "epochs_100000_mod-unet_07-Dec-21.hdf5"
+load_model_name = "u2net_epochs_10000_10-Jan-22.hdf5"
 load_model_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/model/{}/".format(model_name)
 
 prediction_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/".format(model_name)

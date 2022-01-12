@@ -153,6 +153,7 @@ wandb
 *.h5
 *.hdf5
 *.npz
+*.png
 
 # dataset generated from bolts in examples.
 cifar-10-batches-py
