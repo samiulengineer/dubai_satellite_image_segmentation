@@ -3,10 +3,11 @@ from metrics import *
 from model import *
 from loss import *
 from tensorflow import keras
-from tensorflow.keras.callbacks import ModelCheckpoint,TensorBoard
-from datetime import datetime
+from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 from config import *
 import math
+from utils import prediction, pred_plot
+import pathlib
 
 
 # Print Experimental Setup before Training
@@ -15,6 +16,14 @@ print("Model = {}".format(model_name))
 print("Epochs = {}".format(epochs))
 print("Batch Size = {}".format(batch_size))
 print("Preprocessed Data = {}".format(os.path.exists(x_train_dir)))
+
+
+# Model Output Path
+# ----------------------------------------------------------------------------------------------
+pathlib.Path(csv_log_dir).mkdir(parents = True, exist_ok = True)
+pathlib.Path(tensorboard_log_dir).mkdir(parents = True, exist_ok = True)
+pathlib.Path(checkpoint_dir).mkdir(parents = True, exist_ok = True)
+pathlib.Path(prediction_val_dir).mkdir(parents = True, exist_ok = True)
 
 
 # Dataset
@@ -72,7 +81,7 @@ csv_logger = tf.keras.callbacks.CSVLogger(os.path.join(csv_log_dir, csv_log_name
 
 # Early Stopping
 # ----------------------------------------------------------------------------------------------
-# early_stopping = tf.keras.callbacks.EarlyStopping(monitor = 'acc', patience = patience)
+early_stopping = tf.keras.callbacks.EarlyStopping(monitor = 'acc', patience = patience)
 
 
 # Learning Rate Scheduler
@@ -87,44 +96,58 @@ def lr_scheduler(epoch):
 lr_decay = tf.keras.callbacks.LearningRateScheduler(schedule = lr_scheduler)
 
 
-# Prediction on Epoch
+# Prediction during Training
 # ----------------------------------------------------------------------------------------------
 class PerformancePlotCallback(keras.callbacks.Callback):
+    
+    """[save a prediction image after each epoch with accuracy]
+
+    Args:
+        keras ([type]): [description]
+    """
+
     def __init__(self, x_valid, y_valid, model):
         self.x_valid = x_valid
         self.y_valid = y_valid
         self.model = model
         
     def on_epoch_end(self, epoch, logs={}):
-        valid_img = self.x_valid
-        print(valid_img.shape)
+        feature, mask, pred_mask = prediction(index, self.x_valid, self.y_valid, self.model)
         
-        y_valid_argmax = np.argmax(self.y_valid, axis = 3)
-        ground_truth = y_valid_argmax
-        print(ground_truth.shape)
-
-        valid_img_input = np.expand_dims(valid_img, axis = 0)
-        prediction = (self.model.predict(valid_img_input))
-        predicted_img = np.argmax(prediction, axis = 3)[0,:,:]
-
+        """below two line code import pred_plot from utils but shows keyerror - "cat_acc"""""
+        # prediction_name = "test"
+        # pred_plot(feature, mask, pred_mask, index, prediction_dir, prediction_name, model, x_test, y_test)
+        
+        # metrics = ['acc']
+        # model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
+        # eval = model.evaluate(x_test[index:index + 1], y_test[index:index + 1])
    
         plt.figure(figsize=(12, 8))
         
         plt.subplot(231)
         plt.title("Feature")
-        plt.imshow(valid_img)
+        plt.imshow(feature)
         
         plt.subplot(232)
         plt.title("Mask")
-        plt.imshow(ground_truth)
+        plt.imshow(mask)
         
         plt.subplot(233)
         plt.title("Prediction")
-        plt.imshow(predicted_img)
+        plt.imshow(pred_mask)
         plt.tight_layout()
-            
-performance = PerformancePlotCallback(x_valid, y_valid, model)    
         
+        plt.savefig(os.path.join(prediction_val_dir, "trn_img_{}-epoch_{}".format(index, epoch)), bbox_inches='tight')
+        
+            
+pred_during_training = PerformancePlotCallback(x_valid, y_valid, model) 
+
+# Callbacks
+# ----------------------------------------------------------------------------------------------
+if (early_stopping_technique):
+    callbacks = [checkpoint, tensorboard_callback, csv_logger, early_stopping, lr_decay, pred_during_training]
+else:
+    callbacks = [checkpoint, tensorboard_callback, csv_logger, lr_decay, pred_during_training]
 
 
 # fit
@@ -135,6 +158,5 @@ history = model.fit(x_train, y_train,
                     epochs = epochs,
                     validation_data = (x_valid, y_valid), 
                     shuffle = False,
-                    # callbacks = [checkpoint, tensorboard_callback, csv_logger, early_stopping, lr_decay] # early_stopping included
-                    callbacks = [checkpoint, tensorboard_callback, csv_logger, lr_decay, performance]
+                    callbacks = callbacks
                     )

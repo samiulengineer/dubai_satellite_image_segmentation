@@ -12,12 +12,19 @@ import itertools
 from metrics import plot_confusion_matrix, jacard_coef, precision_m, recall_m, f1_m, iou_coef, dice_coef, subset_accuracy, cat_acc
 from loss import focal_loss
 from config import *
+from utils import prediction, pred_plot
+import pathlib
 
 
 # Print Experimental Setup before Training
 # ----------------------------------------------------------------------------------------------
 print("Load Model = {}".format(load_model_name))
 print("Preprocessed Data = {}".format(os.path.exists(x_test_dir)))
+
+
+# Model Output Path
+# ----------------------------------------------------------------------------------------------
+pathlib.Path(prediction_test_dir).mkdir(parents = True, exist_ok = True)
 
 
 # Dataset
@@ -34,59 +41,37 @@ else:
 model = load_model(os.path.join(load_model_dir, load_model_name), compile = False)
 
 
-# Prediction on Test Dataset
+# Prediction
 # ----------------------------------------------------------------------------------------------
-# for num in range(len(x_test)):
-for num in range(5):
-    metrics = ['acc']
-    model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
-    eval = model.evaluate(x_test[num:num+1], y_test[num:num+1])
-    
-    test_img = x_test[num]
+feature, mask, pred_mask = prediction(index, x_test, y_test, model)
 
-    y_test_argmax = np.argmax(y_test, axis = 3)
-    ground_truth = y_test_argmax[num]
 
-    test_img_input = np.expand_dims(test_img, axis = 0)
-    prediction = (model.predict(test_img_input))
-    predicted_img = np.argmax(prediction, axis = 3)[0,:,:]
+# Prediction Plot
+# ----------------------------------------------------------------------------------------------
+total_pred_img = 5 # len(x_test) for all images or any ineteger value less than the length of the x_test
+prediction_name = "test_img_{}_acc_{:.4f}.png".format(index, eval[1])
 
-    plt.figure(figsize=(12, 8))
-    
-    plt.subplot(231)
-    plt.title("Feature")
-    plt.imshow(test_img)
-    
-    plt.subplot(232)
-    plt.title("Mask")
-    plt.imshow(ground_truth)
-    
-    plt.subplot(233)
-    plt.title("Prediction (Accuracy_{})".format(round(eval[1], 4)))
-    plt.imshow(predicted_img)
-    plt.tight_layout()
-    
-    metrics = ['acc']
-    model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
-    eval = model.evaluate(x_test[num:num+1], y_test[num:num+1])
-    
-    plt.savefig(os.path.join(prediction_dir, "test_img_{}_acc_{}.png".format(num, round(eval[1], 4))), bbox_inches='tight')
+if (single_image):
+    feature, mask, pred_mask = prediction(index, x_test, y_test, model)
+    pred_plot(feature, mask, pred_mask, index, prediction_test_dir, prediction_name, model, x_test, y_test)
+else : 
+    for index in range(total_pred_img): 
+        feature, mask, pred_mask = prediction(index, x_test, y_test, model)
+        pred_plot(feature, mask, pred_mask, index, prediction_test_dir, prediction_name, model, x_test, y_test)
 
 
 
 # Average Metrics Score on Test Dataset
 # ----------------------------------------------------------------------------------------------
-metrics = ['acc',jacard_coef,precision_m,recall_m,f1_m,iou_coef,dice_coef,subset_accuracy,cat_acc]
+metrics = ['acc', jacard_coef, precision_m, recall_m, f1_m, iou_coef, dice_coef, subset_accuracy, cat_acc]
 model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
 eval = model.evaluate(x_test, y_test)
 
 
 # Confusion Matrix
 # ----------------------------------------------------------------------------------------------
-y_pred = model.predict(x_test)
-y_pred_argmax = np.argmax(y_pred, axis = 3)
-
-cm = confusion_matrix(y_test_argmax.flatten(), y_pred_argmax.flatten())
+cm = confusion_matrix(np.argmax(y_test, axis = 3).flatten(), # y_true
+                      np.argmax(model.predict(x_test), axis = 3).flatten()) # y_pred
 
 plot_confusion_matrix(cm,
                     normalize = False,
