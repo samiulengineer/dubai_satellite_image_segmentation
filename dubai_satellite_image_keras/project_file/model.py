@@ -165,18 +165,9 @@ def mod_unet(num_classes = num_classes, img_height = height, img_width = width, 
 # U2Net Model
 # ----------------------------------------------------------------------------------------------
 
-class BatchNorm(BatchNormalization):
-    def call(self, inputs, training = None):
-        return super(self.__class__, self).call(inputs, training = True)
-
-def BN(input_tensor):
-    bn = BatchNorm()(input_tensor)
-    a = Activation('relu')(bn)
-    return a
-
 def basicblocks(input, filter, dilates = 1):
     x1 = Conv2D(filter, (3, 3), padding = 'same', dilation_rate = 1*dilates)(input)
-    x1 = BN(x1)
+    x1 = ReLU()(BatchNormalization()(x1))
     return x1
 
 def RSU7(input, in_ch = 3, mid_ch = 12, out_ch = 3):

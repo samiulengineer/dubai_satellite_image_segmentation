@@ -25,7 +25,7 @@ num_classes = 6
 batch_size = 1
 epochs = 3
 learning_rate = 3e-4
-model_name = "unet" # unet/mod-unet/dncnn/u2net
+model_name = "u2net" # unet/mod-unet/dncnn/u2net
 
 
 # Dataset
@@ -59,6 +59,7 @@ csv_log_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/
 checkpoint_name = "{}_epochs_{}_{}.hdf5".format(model_name, epochs, datetime.now().strftime("%d-%b-%y"))
 checkpoint_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/model/{}/".format(model_name)
 
+early_stopping_technique = False
 patience = 500 # required for early_stopping, if accuracy does not change for 500 epochs, model will stop automatically
 
 
@@ -67,4 +68,8 @@ patience = 500 # required for early_stopping, if accuracy does not change for 50
 load_model_name = "unet_epochs_100000_09-Jan-22.hdf5"
 load_model_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/model/{}/".format(model_name)
 
-prediction_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/".format(model_name)
+prediction_test_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/test/".format(model_name)
+prediction_val_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/validation/".format(model_name)
+
+single_image = False # True, then only index x_test image will plot
+index = 100
