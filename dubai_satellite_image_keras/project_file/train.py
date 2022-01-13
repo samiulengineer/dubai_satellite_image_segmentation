@@ -89,66 +89,42 @@ lr_decay = tf.keras.callbacks.LearningRateScheduler(schedule = lr_scheduler)
 
 # Prediction on Epoch
 # ----------------------------------------------------------------------------------------------
-# class PerformancePlotCallback(keras.callbacks.Callback):
-#     def __init__(self, x_test, y_test, model_name):
-#         self.x_test = x_test
-#         self.y_test = y_test
-#         self.model_name = model_name
+class PerformancePlotCallback(keras.callbacks.Callback):
+    def __init__(self, x_valid, y_valid, model):
+        self.x_valid = x_valid
+        self.y_valid = y_valid
+        self.model = model
         
-#     def on_epoch_end(self, epoch, logs={}):
-#         y_pred = self.model.predict(self.x_test)
-#         fig, ax = plt.subplots(figsize=(8,4))
-#         plt.scatter(y_test, y_pred, alpha=0.6, 
-#             color='#FF0000', lw=1, ec='black')
+    def on_epoch_end(self, epoch, logs={}):
+        valid_img = self.x_valid
+        print(valid_img.shape)
         
-#         lims = [0, 5]
+        y_valid_argmax = np.argmax(self.y_valid, axis = 3)
+        ground_truth = y_valid_argmax
+        print(ground_truth.shape)
 
-#         plt.plot(lims, lims, lw=1, color='#0000FF')
-#         plt.ticklabel_format(useOffset=False, style='plain')
-#         plt.xticks(fontsize=18)
-#         plt.yticks(fontsize=18)
-#         plt.xlim(lims)
-#         plt.ylim(lims)
+        valid_img_input = np.expand_dims(valid_img, axis = 0)
+        prediction = (self.model.predict(valid_img_input))
+        predicted_img = np.argmax(prediction, axis = 3)[0,:,:]
 
-#         plt.tight_layout()
-#         plt.title(f'Prediction Visualization Keras Callback - Epoch: {epoch}')
-#         plt.savefig('model_train_images/'+self.model_name+"_"+str(epoch))
-#         plt.close()
+   
+        plt.figure(figsize=(12, 8))
         
+        plt.subplot(231)
+        plt.title("Feature")
+        plt.imshow(valid_img)
         
+        plt.subplot(232)
+        plt.title("Mask")
+        plt.imshow(ground_truth)
         
-#         # y_pred=self.model.predict(x_test)
-#         # y_pred_argmax=np.argmax(y_pred, axis=3)
-
-#         y_test_argmax=np.argmax(y_test, axis=3)
-#         test_img_number = random.randint(0, len(x_test))
-
-#         test_img = x_test[test_img_number]
-#         ground_truth=y_test_argmax[test_img_number]
-
-#         # test_img_norm=test_img[:,:,0][:,:,None]
-#         test_img_input=np.expand_dims(test_img, 0)
-
-#         prediction = (model.predict(test_img_input))
-#         predicted_img=np.argmax(prediction, axis=3)[0,:,:]
-
+        plt.subplot(233)
+        plt.title("Prediction")
+        plt.imshow(predicted_img)
+        plt.tight_layout()
+            
+performance = PerformancePlotCallback(x_valid, y_valid, model)    
         
-#         plt.figure(figsize=(12, 8))
-#         plt.subplot(231)
-#         plt.title('Testing Image')
-#         plt.imshow(test_img)
-#         plt.subplot(232)
-#         plt.title('Testing Label')
-#         plt.imshow(ground_truth)
-#         plt.subplot(233)
-#         plt.title('Prediction on test image')
-#         plt.imshow(predicted_img)
-#         plt.title(f'Prediction Visualization Keras Callback - Epoch: {epoch}')
-#         plt.savefig('model_train_images/'+self.model_name+"_"+str(epoch))
-        
-        
-
-# prediction = PerformancePlotCallback(x_test, y_test, model_name)
 
 
 # fit
@@ -160,5 +136,5 @@ history = model.fit(x_train, y_train,
                     validation_data = (x_valid, y_valid), 
                     shuffle = False,
                     # callbacks = [checkpoint, tensorboard_callback, csv_logger, early_stopping, lr_decay] # early_stopping included
-                    callbacks = [checkpoint, tensorboard_callback, csv_logger, lr_decay]
+                    callbacks = [checkpoint, tensorboard_callback, csv_logger, lr_decay, performance]
                     )

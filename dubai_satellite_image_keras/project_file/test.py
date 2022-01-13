@@ -37,7 +37,7 @@ model = load_model(os.path.join(load_model_dir, load_model_name), compile = Fals
 # Prediction on Test Dataset
 # ----------------------------------------------------------------------------------------------
 # for num in range(len(x_test)):
-for num in range(15):
+for num in range(5):
     metrics = ['acc']
     model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
     eval = model.evaluate(x_test[num:num+1], y_test[num:num+1])
