@@ -1,2 +1,0 @@
-epoch,acc,cat_acc,dice_coef,f1_m,iou_coef,jacard_coef,loss,precision_m,recall_m,subset_accuracy,val_acc,val_cat_acc,val_dice_coef,val_f1_m,val_iou_coef,val_jacard_coef,val_loss,val_precision_m,val_recall_m,val_subset_accuracy
-0,0.68808,0.68808,0.6635792,0.69860446,0.55133593,0.66086173,0.12743060033896875,0.7892659,0.64552873,0.91563576,0.7158816,0.7158816,0.6806572,0.7021869,0.571881,0.6272426,0.1265118974332626,0.8160042,0.6464472,0.91970015
