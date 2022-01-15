@@ -8,7 +8,7 @@ import os
 # GPU Selection
 # ----------------------------------------------------------------------------------------------
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]= "6"
+os.environ["CUDA_VISIBLE_DEVICES"]= "4"
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 
@@ -22,8 +22,8 @@ num_classes = 6
 
 # Training
 # ----------------------------------------------------------------------------------------------
-batch_size = 1
-epochs = 3
+batch_size = 3
+epochs = 10000
 learning_rate = 3e-4
 model_name = "u2net" # unet/mod-unet/dncnn/u2net
 
@@ -65,7 +65,7 @@ patience = 500 # required for early_stopping, if accuracy does not change for 50
 
 # Evaluation
 # ----------------------------------------------------------------------------------------------
-load_model_name = "unet_epochs_100000_09-Jan-22.hdf5"
+load_model_name = "u2net_epochs_3_13-Jan-22.hdf5"
 load_model_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/model/{}/".format(model_name)
 
 prediction_test_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/test/".format(model_name)

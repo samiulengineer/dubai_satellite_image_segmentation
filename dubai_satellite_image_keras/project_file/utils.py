@@ -26,7 +26,7 @@ def prediction(index, x_test, y_test, model):
 
 # Plot the prediction
 # ----------------------------------------------------------------------------------------------
-def pred_plot(feature, mask, pred_mask, index, prediction_dir, prediction_name, model, x_test, y_test):
+def pred_plot(feature, mask, pred_mask, index, prediction_dir, model, x_test, y_test):
     
     """[save feature, mask & predicted images as a subplot with prediction accuracy]
 
@@ -35,6 +35,7 @@ def pred_plot(feature, mask, pred_mask, index, prediction_dir, prediction_name, 
         mask (numpy): [description]
         pred_mask (numpy): [description]
     """
+    
     metrics = ['acc']
     model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
     eval = model.evaluate(x_test[index:index + 1], y_test[index:index + 1]) # evaluate s specific index test/valid image
@@ -54,6 +55,7 @@ def pred_plot(feature, mask, pred_mask, index, prediction_dir, prediction_name, 
     plt.imshow(pred_mask)
     plt.tight_layout()
 
+    prediction_name = "test_img_{}_acc_{:.4f}.png".format(index, eval[1])
     return plt.savefig(os.path.join(prediction_dir, prediction_name), bbox_inches='tight')
 
 

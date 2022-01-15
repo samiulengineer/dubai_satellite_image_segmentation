@@ -112,16 +112,17 @@ class PerformancePlotCallback(keras.callbacks.Callback):
         self.model = model
         
     def on_epoch_end(self, epoch, logs={}):
+        # if (epoch % 2 == 0):
         feature, mask, pred_mask = prediction(index, self.x_valid, self.y_valid, self.model)
         
         """below two line code import pred_plot from utils but shows keyerror - "cat_acc"""""
-        # prediction_name = "test"
+        # prediction_name = "test" # this is the error point where name can not pass
         # pred_plot(feature, mask, pred_mask, index, prediction_dir, prediction_name, model, x_test, y_test)
         
         # metrics = ['acc']
         # model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
         # eval = model.evaluate(x_test[index:index + 1], y_test[index:index + 1])
-   
+
         plt.figure(figsize=(12, 8))
         
         plt.subplot(231)
@@ -138,6 +139,9 @@ class PerformancePlotCallback(keras.callbacks.Callback):
         plt.tight_layout()
         
         plt.savefig(os.path.join(prediction_val_dir, "trn_img_{}-epoch_{}".format(index, epoch)), bbox_inches='tight')
+            
+        # else:
+        #     pass
         
             
 pred_during_training = PerformancePlotCallback(x_valid, y_valid, model) 
@@ -147,7 +151,8 @@ pred_during_training = PerformancePlotCallback(x_valid, y_valid, model)
 if (early_stopping_technique):
     callbacks = [checkpoint, tensorboard_callback, csv_logger, early_stopping, lr_decay, pred_during_training]
 else:
-    callbacks = [checkpoint, tensorboard_callback, csv_logger, lr_decay, pred_during_training]
+    # callbacks = [checkpoint, tensorboard_callback, csv_logger, lr_decay, pred_during_training]
+    callbacks = [checkpoint, tensorboard_callback, csv_logger, lr_decay]
 
 
 # fit

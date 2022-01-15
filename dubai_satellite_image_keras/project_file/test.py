@@ -9,10 +9,10 @@ from tensorflow.keras.models import load_model
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
-from metrics import plot_confusion_matrix, jacard_coef, precision_m, recall_m, f1_m, iou_coef, dice_coef, subset_accuracy, cat_acc
+from metrics import jacard_coef, precision_m, recall_m, f1_m, iou_coef, dice_coef, subset_accuracy, cat_acc
 from loss import focal_loss
 from config import *
-from utils import prediction, pred_plot
+from utils import prediction, pred_plot, plot_confusion_matrix
 import pathlib
 
 
@@ -49,15 +49,15 @@ feature, mask, pred_mask = prediction(index, x_test, y_test, model)
 # Prediction Plot
 # ----------------------------------------------------------------------------------------------
 total_pred_img = 5 # len(x_test) for all images or any ineteger value less than the length of the x_test
-prediction_name = "test_img_{}_acc_{:.4f}.png".format(index, eval[1])
+# prediction_name = "test_img_{}_acc_{:.4f}.png".format(index, eval[1])
 
 if (single_image):
     feature, mask, pred_mask = prediction(index, x_test, y_test, model)
-    pred_plot(feature, mask, pred_mask, index, prediction_test_dir, prediction_name, model, x_test, y_test)
+    pred_plot(feature, mask, pred_mask, index, prediction_test_dir, model, x_test, y_test)
 else : 
-    for index in range(total_pred_img): 
+    for index in range(total_pred_img):
         feature, mask, pred_mask = prediction(index, x_test, y_test, model)
-        pred_plot(feature, mask, pred_mask, index, prediction_test_dir, prediction_name, model, x_test, y_test)
+        pred_plot(feature, mask, pred_mask, index, prediction_test_dir, model, x_test, y_test)
 
 
 
