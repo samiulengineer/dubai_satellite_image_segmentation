@@ -11,8 +11,16 @@ from loss import focal_loss
 # Prediction
 # ----------------------------------------------------------------------------------------------
 def prediction(index, x_test, y_test, model):
-    """
-    predict image ndarray based on feature and mask
+    """[predict image ndarray based on feature and mask]
+
+    Args:
+        index ([type]): image index
+        x_test ([type]): test features
+        y_test ([type]): test mask/labels
+        model ([type]): model object
+
+    Returns:
+        [ndarray]: feature, mask and prediction mask as ndarray
     """
     feature = x_test[index]
     mask = np.argmax(y_test, axis = 3)[index]
@@ -27,18 +35,26 @@ def prediction(index, x_test, y_test, model):
 # Plot the prediction
 # ----------------------------------------------------------------------------------------------
 def pred_plot(feature, mask, pred_mask, index, prediction_dir, model, x_test, y_test):
-    
     """[save feature, mask & predicted images as a subplot with prediction accuracy]
 
+
     Args:
-        feature (numpy): [description]
-        mask (numpy): [description]
-        pred_mask (numpy): [description]
+        feature ([type]): an index x_test
+        mask ([type]): and index argmax y_test
+        pred_mask ([type]): prediction
+        index ([type]): image index
+        prediction_dir ([type]): saving a fig to this directory
+        model ([type]): model object
+        x_test ([type]): 
+        y_test ([type]): 
+
+    Returns:
+        [figure]: save a subplot of feature, mask and prediction
     """
     
-    metrics = ['acc']
-    model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
-    eval = model.evaluate(x_test[index:index + 1], y_test[index:index + 1]) # evaluate s specific index test/valid image
+    # metrics = ['acc']
+    # model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
+    eval = model.evaluate(x_test[index:index + 1], y_test[index:index + 1]) # evaluate specific index test/valid image
     
     plt.figure(figsize=(12, 8))
 
