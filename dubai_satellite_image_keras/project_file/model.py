@@ -1,17 +1,14 @@
 import os
+from config import *
+import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, concatenate, Conv2DTranspose, BatchNormalization, Dropout, Lambda
 from tensorflow.keras import backend as K
-import tensorflow as tf
-from tensorflow.keras.layers import Layer
-from tensorflow.keras.layers import Conv2D, ReLU, Concatenate, Activation, MaxPool2D, Lambda
-from config import *
+from tensorflow.keras.layers import LeakyReLU, add, Conv2D, PReLU, ReLU, Concatenate, Activation, MaxPool2D, Input, Conv2D, MaxPooling2D, UpSampling2D, concatenate, Conv2DTranspose, BatchNormalization, Dropout, Lambda
 
 
 # UNET Model
 # ----------------------------------------------------------------------------------------------
-
 def unet(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels):
     
     inputs = Input((img_height, img_width, in_channels))
@@ -76,7 +73,6 @@ def unet(num_classes = num_classes, img_height = height, img_width = width, in_c
     
 # Modification UNET Model
 # ----------------------------------------------------------------------------------------------
-
 def mod_unet(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels):
     
     inputs = Input((img_height, img_width, in_channels))
@@ -164,7 +160,6 @@ def mod_unet(num_classes = num_classes, img_height = height, img_width = width, 
 
 # U2Net Model
 # ----------------------------------------------------------------------------------------------
-
 def basicblocks(input, filter, dilates = 1):
     x1 = Conv2D(filter, (3, 3), padding = 'same', dilation_rate = 1*dilates)(input)
     x1 = ReLU()(BatchNormalization()(x1))
@@ -395,7 +390,6 @@ def RSU4f(input, in_ch = 3, mid_ch = 12, out_ch = 3):
     output = keras.layers.add([hx1d, hxin])
     return output
 
-
 def u2net(img_height = height, img_width = width, in_channels = in_channels, num_classes = num_classes):
 
     input = Input((img_height, img_width, in_channels))
@@ -463,7 +457,6 @@ def u2net(img_height = height, img_width = width, in_channels = in_channels, num
 
 # DnCNN Model
 # ----------------------------------------------------------------------------------------------
-
 def DnCNN(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels):
     
     inpt = Input(shape=(img_height, img_width, in_channels))
@@ -484,8 +477,234 @@ def DnCNN(num_classes = num_classes, img_height = height, img_width = width, in_
     return model
 
 
+# 2D-VNET Model
+# ----------------------------------------------------------------------------------------------
+def resBlock(input, stage, keep_prob, stage_num = 5):
+    
+    for _ in range(3 if stage>3 else stage):
+        conv = PReLU()(BatchNormalization()(Conv2D(16*(2**(stage-1)), 5, activation = None, padding = 'same', kernel_initializer = 'he_normal')(input)))
+        # print('conv_down_stage_%d:' %stage,conv.get_shape().as_list())
+    conv_add = PReLU()(add([input, conv]))
+    # print('conv_add:',conv_add.get_shape().as_list())
+    conv_drop = Dropout(keep_prob)(conv_add)
+    
+    if stage < stage_num:
+        conv_downsample = PReLU()(BatchNormalization()(Conv2D(16*(2**stage), 2, strides=(2, 2),activation = None, padding = 'same', kernel_initializer = 'he_normal')(conv_drop)))
+        return conv_downsample, conv_add
+    else:
+        return conv_add, conv_add
+    
+def up_resBlock(forward_conv,input_conv,stage):
+    
+    conv = concatenate([forward_conv, input_conv], axis = -1)
+    
+    for _ in range(3 if stage>3 else stage):
+        conv = PReLU()(BatchNormalization()(Conv2D(16*(2**(stage-1)), 5, activation = None, padding = 'same', kernel_initializer = 'he_normal')(conv)))
+        conv_add = PReLU()(add([input_conv,conv]))
+
+    if stage > 1:
+        conv_upsample = PReLU()(BatchNormalization()(Conv2DTranspose(16*(2**(stage-2)),2,strides = (2, 2),padding = 'valid',activation = None,kernel_initializer = 'he_normal')(conv_add)))
+        return conv_upsample
+    else:
+        return conv_add
+    
+def vnet(num_classes = 6, img_height = 256, img_width = 256, in_channels = 3):
+    keep_prob = 0.99
+    features = []
+    stage_num = 5 # number of blocks
+    input = Input((img_height, img_width, in_channels))
+    x = PReLU()(BatchNormalization()(Conv2D(16, 5, activation = None, padding = 'same', kernel_initializer = 'he_normal')(input)))
+    
+    for s in range(1, stage_num+1):
+        x, feature = resBlock(x, s, keep_prob, stage_num)
+        features.append(feature)
+        
+    conv_up = PReLU()(BatchNormalization()(Conv2DTranspose(16*(2**(s-2)),2, strides = (2, 2), padding = 'valid', activation = None, kernel_initializer = 'he_normal')(x)))
+    
+    for d in range(stage_num-1, 0, -1):
+        conv_up = up_resBlock(features[d-1], conv_up, d)
+
+    output = Conv2D(num_classes, 1, activation = 'softmax', padding = 'same', kernel_initializer = 'he_normal')(conv_up)
+        
+    model = Model(inputs = [input], outputs = [output])
+
+    return model
+
+
+# UNET++ Model
+# ----------------------------------------------------------------------------------------------
+def conv2d(filters: int):
+    return Conv2D(filters = filters,
+                  kernel_size = (3, 3),
+                  padding='same')
+
+def conv2dtranspose(filters: int):
+    return Conv2DTranspose(filters = filters,
+                           kernel_size = (2, 2),
+                           strides = (2, 2),
+                           padding = 'same')
+
+def unet_plus_plus(num_classes = 6, img_height = 256, img_width = 256, in_channels = 3):
+
+    input = Input((img_height, img_width, in_channels))
+
+    x00 = conv2d(filters = int(16 * 2))(input)
+    x00 = BatchNormalization()(x00)
+    x00 = LeakyReLU(0.01)(x00)
+    x00 = Dropout(0.2)(x00)
+    x00 = conv2d(filters = int(16 * 2))(x00)
+    x00 = BatchNormalization()(x00)
+    x00 = LeakyReLU(0.01)(x00)
+    x00 = Dropout(0.2)(x00)
+    p0 = MaxPooling2D(pool_size=(2, 2))(x00)
+
+    x10 = conv2d(filters = int(32 * 2))(p0)
+    x10 = BatchNormalization()(x10)
+    x10 = LeakyReLU(0.01)(x10)
+    x10 = Dropout(0.2)(x10)
+    x10 = conv2d(filters = int(32 * 2))(x10)
+    x10 = BatchNormalization()(x10)
+    x10 = LeakyReLU(0.01)(x10)
+    x10 = Dropout(0.2)(x10)
+    p1 = MaxPooling2D(pool_size=(2, 2))(x10)
+
+    x01 = conv2dtranspose(int(16 * 2))(x10)
+    x01 = concatenate([x00, x01])
+    x01 = conv2d(filters = int(16 * 2))(x01)
+    x01 = BatchNormalization()(x01)
+    x01 = LeakyReLU(0.01)(x01)
+    x01 = conv2d(filters = int(16 * 2))(x01)
+    x01 = BatchNormalization()(x01)
+    x01 = LeakyReLU(0.01)(x01)
+    x01 = Dropout(0.2)(x01)
+
+    x20 = conv2d(filters = int(64 * 2))(p1)
+    x20 = BatchNormalization()(x20)
+    x20 = LeakyReLU(0.01)(x20)
+    x20 = Dropout(0.2)(x20)
+    x20 = conv2d(filters = int(64 * 2))(x20)
+    x20 = BatchNormalization()(x20)
+    x20 = LeakyReLU(0.01)(x20)
+    x20 = Dropout(0.2)(x20)
+    p2 = MaxPooling2D(pool_size=(2, 2))(x20)
+
+    x11 = conv2dtranspose(int(16 * 2))(x20)
+    x11 = concatenate([x10, x11])
+    x11 = conv2d(filters = int(16 * 2))(x11)
+    x11 = BatchNormalization()(x11)
+    x11 = LeakyReLU(0.01)(x11)
+    x11 = conv2d(filters = int(16 * 2))(x11)
+    x11 = BatchNormalization()(x11)
+    x11 = LeakyReLU(0.01)(x11)
+    x11 = Dropout(0.2)(x11)
+
+    x02 = conv2dtranspose(int(16 * 2))(x11)
+    x02 = concatenate([x00, x01, x02])
+    x02 = conv2d(filters = int(16 * 2))(x02)
+    x02 = BatchNormalization()(x02)
+    x02 = LeakyReLU(0.01)(x02)
+    x02 = conv2d(filters = int(16 * 2))(x02)
+    x02 = BatchNormalization()(x02)
+    x02 = LeakyReLU(0.01)(x02)
+    x02 = Dropout(0.2)(x02)
+
+    x30 = conv2d(filters = int(128 * 2))(p2)
+    x30 = BatchNormalization()(x30)
+    x30 = LeakyReLU(0.01)(x30)
+    x30 = Dropout(0.2)(x30)
+    x30 = conv2d(filters = int(128 * 2))(x30)
+    x30 = BatchNormalization()(x30)
+    x30 = LeakyReLU(0.01)(x30)
+    x30 = Dropout(0.2)(x30)
+    p3 = MaxPooling2D(pool_size=(2, 2))(x30)
+
+    x21 = conv2dtranspose(int(16 * 2))(x30)
+    x21 = concatenate([x20, x21])
+    x21 = conv2d(filters = int(16 * 2))(x21)
+    x21 = BatchNormalization()(x21)
+    x21 = LeakyReLU(0.01)(x21)
+    x21 = conv2d(filters = int(16 * 2))(x21)
+    x21 = BatchNormalization()(x21)
+    x21 = LeakyReLU(0.01)(x21)
+    x21 = Dropout(0.2)(x21)
+
+    x12 = conv2dtranspose(int(16 * 2))(x21)
+    x12 = concatenate([x10, x11, x12])
+    x12 = conv2d(filters = int(16 * 2))(x12)
+    x12 = BatchNormalization()(x12)
+    x12 = LeakyReLU(0.01)(x12)
+    x12 = conv2d(filters = int(16 * 2))(x12)
+    x12 = BatchNormalization()(x12)
+    x12 = LeakyReLU(0.01)(x12)
+    x12 = Dropout(0.2)(x12)
+
+    x03 = conv2dtranspose(int(16 * 2))(x12)
+    x03 = concatenate([x00, x01, x02, x03])
+    x03 = conv2d(filters = int(16 * 2))(x03)
+    x03 = BatchNormalization()(x03)
+    x03 = LeakyReLU(0.01)(x03)
+    x03 = conv2d(filters = int(16 * 2))(x03)
+    x03 = BatchNormalization()(x03)
+    x03 = LeakyReLU(0.01)(x03)
+    x03 = Dropout(0.2)(x03)
+
+    m = conv2d(filters = int(256 * 2))(p3)
+    m = BatchNormalization()(m)
+    m = LeakyReLU(0.01)(m)
+    m = conv2d(filters = int(256 * 2))(m)
+    m = BatchNormalization()(m)
+    m = LeakyReLU(0.01)(m)
+    m = Dropout(0.2)(m)
+
+    x31 = conv2dtranspose(int(128 * 2))(m)
+    x31 = concatenate([x31, x30])
+    x31 = conv2d(filters = int(128 * 2))(x31)
+    x31 = BatchNormalization()(x31)
+    x31 = LeakyReLU(0.01)(x31)
+    x31 = conv2d(filters = int(128 * 2))(x31)
+    x31 = BatchNormalization()(x31)
+    x31 = LeakyReLU(0.01)(x31)
+    x31 = Dropout(0.2)(x31)
+
+    x22 = conv2dtranspose(int(64 * 2))(x31)
+    x22 = concatenate([x22, x20, x21])
+    x22 = conv2d(filters = int(64 * 2))(x22)
+    x22 = BatchNormalization()(x22)
+    x22 = LeakyReLU(0.01)(x22)
+    x22 = conv2d(filters = int(64 * 2))(x22)
+    x22 = BatchNormalization()(x22)
+    x22 = LeakyReLU(0.01)(x22)
+    x22 = Dropout(0.2)(x22)
+
+    x13 = conv2dtranspose(int(32 * 2))(x22)
+    x13 = concatenate([x13, x10, x11, x12])
+    x13 = conv2d(filters = int(32 * 2))(x13)
+    x13 = BatchNormalization()(x13)
+    x13 = LeakyReLU(0.01)(x13)
+    x13 = conv2d(filters = int(32 * 2))(x13)
+    x13 = BatchNormalization()(x13)
+    x13 = LeakyReLU(0.01)(x13)
+    x13 = Dropout(0.2)(x13)
+
+    x04 = conv2dtranspose(int(16 * 2))(x13)
+    x04 = concatenate([x04, x00, x01, x02, x03], axis=3)
+    x04 = conv2d(filters = int(16 * 2))(x04)
+    x04 = BatchNormalization()(x04)
+    x04 = LeakyReLU(0.01)(x04)
+    x04 = conv2d(filters = int(16 * 2))(x04)
+    x04 = BatchNormalization()(x04)
+    x04 = LeakyReLU(0.01)(x04)
+    x04 = Dropout(0.2)(x04)
+
+    output = Conv2D(num_classes, kernel_size = (1, 1), activation = 'softmax')(x04)
+ 
+    model = Model(inputs=[input], outputs=[output])
+    
+    return model
+
+
 if __name__ == '__main__':
     
-    model = u2net()
+    model = vnet()
     model.summary()
     

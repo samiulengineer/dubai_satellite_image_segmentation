@@ -22,10 +22,10 @@ num_classes = 6
 
 # Training
 # ----------------------------------------------------------------------------------------------
-batch_size = 1
-epochs = 3
+model_name = "unet++" # unet/mod-unet/dncnn/u2net/vnet/unet++
+batch_size = 3
+epochs = 10000
 learning_rate = 3e-4
-model_name = "unet" # unet/mod-unet/dncnn/u2net
 
 
 # Dataset
@@ -65,11 +65,11 @@ patience = 500 # required for early_stopping, if accuracy does not change for 50
 
 # Evaluation
 # ----------------------------------------------------------------------------------------------
-load_model_name = "unet_epochs_100000_09-Jan-22.hdf5"
+load_model_name = "unet++_epochs_10000_11-Jan-22.hdf5"
 load_model_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/model/{}/".format(model_name)
 
 prediction_test_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/test/".format(model_name)
 prediction_val_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/validation/".format(model_name)
 
-single_image = True # True, then only index x_test image will plot
+single_image = False # True, then only index x_test image will plot
 index = 61

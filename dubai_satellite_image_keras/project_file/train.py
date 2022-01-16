@@ -1,13 +1,13 @@
 import os
-from metrics import *
-from model import *
-from loss import *
-from tensorflow import keras
-from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
-from config import *
 import math
-from utils import prediction, pred_plot
 import pathlib
+from loss import *
+from model import *
+from config import *
+from metrics import *
+from tensorflow import keras
+from utils import prediction, pred_plot
+from tensorflow.keras.callbacks import ModelCheckpoint
 
 
 # Print Experimental Setup before Training
@@ -47,12 +47,11 @@ elif(model_name == 'dncnn'):
     model = DnCNN(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
 elif(model_name == 'u2net'):
     model = u2net(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
+elif(model_name == 'vnet'):
+    model = vnet(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
+elif(model_name == 'unet++'):
+    model = unet_plus_plus(num_classes = num_classes, img_height = height, img_width = width, in_channels = in_channels)
   
-    
-# Metrices
-# ----------------------------------------------------------------------------------------------
-metrics = ['acc',jacard_coef,precision_m,recall_m,f1_m,iou_coef,dice_coef,subset_accuracy,cat_acc]
-
 
 # Optimizer
 # ----------------------------------------------------------------------------------------------

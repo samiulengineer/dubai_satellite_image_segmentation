@@ -1,24 +1,24 @@
-from tensorflow.keras import backend as K
-from tensorflow import keras
-import tensorflow as tf
-from sklearn.metrics import confusion_matrix
-import numpy as np
-import matplotlib.pyplot as plt
-import itertools
 import os
+import itertools
+import numpy as np
+import tensorflow as tf
 from loss import focal_loss
+from tensorflow import keras
+import matplotlib.pyplot as plt
+from tensorflow.keras import backend as K
 
 # Prediction
 # ----------------------------------------------------------------------------------------------
 def prediction(index, x_test, y_test, model):
-    """[predict image ndarray based on feature and mask]
-
+    """
+    Summary:
+        predict image ndarray based on feature and mask
+        this function will prepare feature, mask & pred_mask to plot 
     Args:
-        index ([type]): image index
-        x_test ([type]): test features
-        y_test ([type]): test mask/labels
+        index (ndarray): image index
+        x_test (ndarray): test features
+        y_test (ndarray): test mask/labels
         model ([type]): model object
-
     Returns:
         [ndarray]: feature, mask and prediction mask as ndarray
     """
@@ -35,9 +35,9 @@ def prediction(index, x_test, y_test, model):
 # Plot the prediction
 # ----------------------------------------------------------------------------------------------
 def pred_plot(feature, mask, pred_mask, index, prediction_dir, model, x_test, y_test):
-    """[save feature, mask & predicted images as a subplot with prediction accuracy]
-
-
+    """
+    Summary:
+        save feature, mask & predicted images as a subplot with prediction accuracy]
     Args:
         feature ([type]): an index x_test
         mask ([type]): and index argmax y_test
@@ -47,13 +47,11 @@ def pred_plot(feature, mask, pred_mask, index, prediction_dir, model, x_test, y_
         model ([type]): model object
         x_test ([type]): 
         y_test ([type]): 
-
     Returns:
         [figure]: save a subplot of feature, mask and prediction
     """
-    
-    # metrics = ['acc']
-    # model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
+    metrics = ['acc']
+    model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
     eval = model.evaluate(x_test[index:index + 1], y_test[index:index + 1]) # evaluate specific index test/valid image
     
     plt.figure(figsize=(12, 8))
@@ -69,7 +67,6 @@ def pred_plot(feature, mask, pred_mask, index, prediction_dir, model, x_test, y_
     plt.subplot(233)
     plt.title("Prediction (Accuracy_{:.4f})".format(eval[1]))
     plt.imshow(pred_mask)
-    plt.tight_layout()
 
     prediction_name = "test_img_{}_acc_{:.4f}.png".format(index, eval[1])
     return plt.savefig(os.path.join(prediction_dir, prediction_name), bbox_inches='tight')
@@ -82,7 +79,18 @@ def plot_confusion_matrix(cm,
                           title = 'Confusion matrix',
                           cmap = None,
                           normalize = True):
-
+    """
+    Summary:
+        plot confusion matrix based on scikit-learn confusion matrix
+    Args:
+        cm (ndarray): scikit-learn confusion matrix object
+        target_names (string list): list of classes as string
+        title (string): plot title
+        cmap (matplt object): matplot coloring
+        normalize (bool): True/False
+    Returns:
+        [figure]: show confusion matrix in terms of actual and predicted class
+    """
     accuracy = np.trace(cm) / float(np.sum(cm))
     misclass = 1 - accuracy
 

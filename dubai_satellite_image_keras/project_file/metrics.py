@@ -56,3 +56,5 @@ def dice_coef(y_true, y_pred, smooth=1):
     union = K.sum(y_true, axis=[1,2,3]) + K.sum(y_pred, axis=[1,2,3])
     dice = K.mean((2. * intersection + smooth)/(union + smooth), axis=0)
     return dice
+
+metrics = ['acc', jacard_coef, precision_m, recall_m, f1_m, iou_coef, dice_coef, subset_accuracy, cat_acc]
