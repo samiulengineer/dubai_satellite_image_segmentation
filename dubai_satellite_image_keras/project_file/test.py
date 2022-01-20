@@ -31,8 +31,8 @@ pathlib.Path(prediction_test_dir).mkdir(parents = True, exist_ok = True)
 """if the preprocessed dataset is available as npy, load from them
     otherwise, do all data preprocessing"""
 if (os.path.exists(x_test_dir)):
-    x_test = np.load(x_test_dir)
-    y_test = np.load(y_test_dir)
+    x_test = np.load(x_test_dir, mmap_mode='r')
+    y_test = np.load(y_test_dir, mmap_mode='r')
 else:
     from dataset import *
 

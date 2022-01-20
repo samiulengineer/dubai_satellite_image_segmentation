@@ -147,6 +147,11 @@ n_classes = len(np.unique(labels))
 labels_cat = to_categorical(labels, num_classes = n_classes)
 
 
+# Dummy Data for Debugging
+# ----------------------------------------------------------------------------------------------
+
+    
+
 # Input data Splitting
 # ----------------------------------------------------------------------------------------------
 def data_split():
@@ -177,12 +182,12 @@ if __name__ == '__main__':
     # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_valid.npy", y_valid)
     # np.save("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_test.npy", y_test)
 
-    # x_train = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_train.npy")
-    # x_valid = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_valid.npy")
-    # x_test = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_test.npy")
-    # y_train = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_train.npy")
-    # y_valid = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_valid.npy")
-    # y_test = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_test.npy")
+    x_train = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_train.npy", mmap_mode='r')
+    x_valid = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_valid.npy", mmap_mode='r')
+    x_test = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/x_test.npy", mmap_mode='r')
+    y_train = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_train.npy", mmap_mode='r')
+    y_valid = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_valid.npy", mmap_mode='r')
+    y_test = np.load("/home/mdsamiul/semantic-segmentation/data/Aerial_Image/preprocessed_data/y_test.npy", mmap_mode='r')
     
     
     print("Total number of images : {}".format(len(image_dataset)))

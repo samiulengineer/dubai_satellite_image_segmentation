@@ -39,14 +39,14 @@ def pred_plot(feature, mask, pred_mask, index, prediction_dir, model, x_test, y_
     Summary:
         save feature, mask & predicted images as a subplot with prediction accuracy]
     Args:
-        feature ([type]): an index x_test
-        mask ([type]): and index argmax y_test
-        pred_mask ([type]): prediction
+        feature (ndarray, (H,W,C)): an index x_test
+        mask (ndarray): and index argmax y_test
+        pred_mask (ndarra,(H,W)): prediction
         index ([type]): image index
         prediction_dir ([type]): saving a fig to this directory
         model ([type]): model object
-        x_test ([type]): 
-        y_test ([type]): 
+        x_test (ndarray): 
+        y_test (ndarray): 
     Returns:
         [figure]: save a subplot of feature, mask and prediction
     """
