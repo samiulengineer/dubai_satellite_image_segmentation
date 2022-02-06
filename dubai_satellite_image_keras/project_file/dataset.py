@@ -146,10 +146,6 @@ labels = np.expand_dims(labels, axis = 3)
 n_classes = len(np.unique(labels))
 labels_cat = to_categorical(labels, num_classes = n_classes)
 
-
-# Dummy Data for Debugging
-# ----------------------------------------------------------------------------------------------
-
     
 
 # Input data Splitting

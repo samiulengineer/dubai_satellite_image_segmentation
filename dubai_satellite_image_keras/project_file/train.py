@@ -26,8 +26,8 @@ pathlib.Path(checkpoint_dir).mkdir(parents = True, exist_ok = True)
 pathlib.Path(prediction_val_dir).mkdir(parents = True, exist_ok = True)
 
 
-def normalize_img(image, label):
-    return tf.cast(image, tf.float32)/255.0, label
+# def normalize_img(image, label):
+#     return tf.cast(image, tf.float32)/255.0, label
 
 # Dataset
 # ----------------------------------------------------------------------------------------------
@@ -38,16 +38,16 @@ if (os.path.exists(x_train_dir)):
     y_valid = np.load(y_valid_dir, mmap_mode='r')
     
     train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-    train_dataset = train_dataset.map(normalize_img, tf.data.experimental.AUTOTUNE)
-    train_dataset = train_dataset.cache()
+    # train_dataset = train_dataset.map(normalize_img, tf.data.experimental.AUTOTUNE)
+    # train_dataset = train_dataset.cache()
     train_dataset = train_dataset.batch(batch_size)
-    train_dataset = train_dataset.prefetch(tf.data.experimental.AUTOTUNE)
+    # train_dataset = train_dataset.prefetch(tf.data.experimental.AUTOTUNE)
     
     val_dataset = tf.data.Dataset.from_tensor_slices((x_valid, y_valid))
-    val_dataset = val_dataset.map(normalize_img, tf.data.experimental.AUTOTUNE)
-    val_dataset = val_dataset.cache()
+    # val_dataset = val_dataset.map(normalize_img, tf.data.experimental.AUTOTUNE)
+    # val_dataset = val_dataset.cache()
     val_dataset = val_dataset.batch(batch_size)
-    val_dataset = val_dataset.prefetch(tf.data.experimental.AUTOTUNE)
+    # val_dataset = val_dataset.prefetch(tf.data.experimental.AUTOTUNE)
     
 else:
     from dataset import *
