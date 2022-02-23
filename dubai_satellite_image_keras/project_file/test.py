@@ -60,7 +60,7 @@ else :
 
 # Average Metrics Score on Test Dataset
 # ----------------------------------------------------------------------------------------------
-model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
+model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics, jit_compile = True)
 eval = model.evaluate(x_test, y_test)
 
 

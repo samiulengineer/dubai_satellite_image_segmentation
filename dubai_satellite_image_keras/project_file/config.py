@@ -31,7 +31,7 @@ num_classes = 6
 
 # Training
 # ----------------------------------------------------------------------------------------------
-model_name = "u2net" # unet/mod-unet/dncnn/u2net/vnet/unet++
+model_name = "unet" # unet/mod-unet/dncnn/u2net/vnet/unet++
 batch_size = 3
 epochs = 3
 learning_rate = 3e-4
@@ -80,5 +80,5 @@ load_model_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_ker
 prediction_test_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/test/".format(model_name)
 prediction_val_dir = "/home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras/prediction/{}/validation/".format(model_name)
 
-single_image = False # if True, then only index x_test image will plot
+single_image = True # if True, then only index x_test image will plot
 index = 61
