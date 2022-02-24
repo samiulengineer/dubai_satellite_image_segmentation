@@ -1,131 +1,285 @@
 import os
+import math
+import yaml
 import itertools
+from loss import *
 import numpy as np
+import pathlib
 import tensorflow as tf
-from loss import focal_loss
 from tensorflow import keras
+from datetime import datetime
 import matplotlib.pyplot as plt
 from tensorflow.keras import backend as K
 
-# Prediction
+
+# Callbacks and Prediction during Training
 # ----------------------------------------------------------------------------------------------
-def prediction(index, x_test, y_test, model):
+class SelectCallbacks(keras.callbacks.Callback):
+    def __init__(self, val_dataset, model, config):
+        """
+        Summary:
+            callback class for validation prediction and create the necessary callbacks objects
+        Arguments:
+            val_dataset (object): MyDataset class object
+            model (object): keras.Model object
+            config (dict): configuration dictionary
+        Return:
+            class object
+        """
+        super(keras.callbacks.Callback, self).__init__()
+
+        self.val_dataset = val_dataset
+        self.model = model
+        self.config = config
+        self.callbacks = []
+
+    def lr_scheduler(self, epoch):
+        """
+        Summary:
+            learning rate decrease according to the model performance
+        Arguments:
+            epoch (int): current epoch
+        Return:
+            learning rate
+        """
+        drop = 0.5
+        epoch_drop = self.config['epochs'] / 8.
+        lr = self.config['learning_rate'] * math.pow(drop, math.floor((1 + epoch) / epoch_drop))
+        return lr
+
+    def on_epoch_end(self, epoch, logs={}):
+        """
+        Summary:
+            call after every epoch to predict mask
+        Arguments:
+            epoch (int): current epoch
+        Output:
+            save predict mask
+        """
+        if (epoch % self.config['val_plot_epoch'] == 0): # every after certain epochs the model will predict mask
+            single_img_show(self.val_dataset, self.model, self.config['prediction_val_dir'], self.config['index'])
+
+    def get_callbacks(self, val_dataset, model):
+        """
+        Summary:
+            creating callbacks based on configuration
+        Arguments:
+            val_dataset (object): MyDataset class object
+            model (object): keras.Model class object
+        Return:
+            list of callbacks
+        """
+        if self.config['csv']:
+            self.callbacks.append(keras.callbacks.CSVLogger(os.path.join(self.config['csv_log_dir'], self.config['csv_log_name']), separator = ",", append = False))
+        
+        if self.config['checkpoint']:
+            self.callbacks.append(keras.callbacks.ModelCheckpoint(os.path.join(self.config['checkpoint_dir'], self.config['checkpoint_name']), save_best_only = True))
+        
+        if self.config['tensorboard']:
+            self.callbacks.append(keras.callbacks.TensorBoard(log_dir = os.path.join(self.config['tensorboard_log_dir'], self.config['tensorboard_log_name'])))
+        
+        if self.config['lr']:
+            self.callbacks.append(keras.callbacks.LearningRateScheduler(schedule = self.lr_scheduler))
+        
+        if self.config['early_stop']:
+            self.callbacks.append(keras.callbacks.EarlyStopping(monitor = 'acc', patience = self.config['patience']))
+        
+        if self.config['val_pred_plot']:
+            self.callbacks.append(SelectCallbacks(val_dataset, model, self.config))
+        
+        return self.callbacks
+
+# Prepare masks
+# ----------------------------------------------------------------------------------------------
+def create_mask(mask, pred_mask):
     """
     Summary:
-        predict image ndarray based on feature and mask
-        this function will prepare feature, mask & pred_mask to plot 
-    Args:
-        index (ndarray): image index
-        x_test (ndarray): test features
-        y_test (ndarray): test mask/labels
-        model ([type]): model object
-    Returns:
-        [ndarray]: feature, mask and prediction mask as ndarray
+        apply argmax on mask and pred_mask class dimension
+    Arguments:
+        mask (ndarray): image labels/ masks
+        pred_mask (ndarray): prediction labels/ masks
+    Return:
+        return mask and pred_mask after argmax
     """
-    feature = x_test[index]
-    mask = np.argmax(y_test, axis = 3)[index]
+    mask = np.argmax(mask, axis = 3)
+    pred_mask = np.argmax(pred_mask, axis = 3)
+    return mask, pred_mask
 
-    test_img_input = np.expand_dims(feature, axis = 0)
-    prediction = (model.predict(test_img_input))
-    pred_mask = np.argmax(prediction, axis = 3)[0,:,:]
-    
-    return feature, mask, pred_mask
-
-
-# Plot the prediction
+# Sub-ploting and save
 # ----------------------------------------------------------------------------------------------
-def pred_plot(feature, mask, pred_mask, index, prediction_dir, model, x_test, y_test):
+def display(display_list, idx, directory, score):
     """
     Summary:
-        save feature, mask & predicted images as a subplot with prediction accuracy]
-    Args:
-        feature (ndarray, (H,W,C)): an index x_test
-        mask (ndarray): and index argmax y_test
-        pred_mask (ndarra,(H,W)): prediction
-        index ([type]): image index
-        prediction_dir ([type]): saving a fig to this directory
-        model ([type]): model object
-        x_test (ndarray): 
-        y_test (ndarray): 
-    Returns:
-        [figure]: save a subplot of feature, mask and prediction
+        save all images into single figure
+    Arguments:
+        display_list (dict): a python dictionary key is the title of the figure
+        idx (int) : image index in dataset object
+        directory (str) : path to save the plot figure
+        score (float) : accuracy of the predicted mask
+    Return:
+        save images figure into directory
     """
-    metrics = ['acc']
-    model.compile(optimizer = "adam", loss = focal_loss(), metrics = metrics)
-    eval = model.evaluate(x_test[index:index + 1], y_test[index:index + 1]) # evaluate specific index test/valid image
-    
     plt.figure(figsize=(12, 8))
+    title = list(display_list.keys())
 
-    plt.subplot(231)
-    plt.title("Feature")
-    plt.imshow(feature)
+    for i in range(len(display_list)):
+        plt.subplot(1, len(display_list), i+1)
+        plt.title(title[i])
+        plt.imshow((display_list[title[i]]))
+        plt.axis('off')
 
-    plt.subplot(232)
-    plt.title("Mask")
-    plt.imshow(mask)
+    prediction_name = "test_img_{}_acc_{:.4f}.png".format(idx, score) # create file name to save
+    return plt.savefig(os.path.join(directory, prediction_name), bbox_inches='tight')
 
-    plt.subplot(233)
-    plt.title("Prediction (Accuracy_{:.4f})".format(eval[1]))
-    plt.imshow(pred_mask)
-
-    prediction_name = "test_img_{}_acc_{:.4f}.png".format(index, eval[1])
-    return plt.savefig(os.path.join(prediction_dir, prediction_name), bbox_inches='tight')
-
-
-# Plot Confusion Matrix
+# Save single plot figure
 # ----------------------------------------------------------------------------------------------
-def plot_confusion_matrix(cm,
-                          target_names,
-                          title = 'Confusion matrix',
-                          cmap = None,
-                          normalize = True):
+def single_img_show(dataset, model, directory, index):
     """
     Summary:
-        plot confusion matrix based on scikit-learn confusion matrix
-    Args:
-        cm (ndarray): scikit-learn confusion matrix object
-        target_names (string list): list of classes as string
-        title (string): plot title
-        cmap (matplt object): matplot coloring
-        normalize (bool): True/False
-    Returns:
-        [figure]: show confusion matrix in terms of actual and predicted class
+        save single image into the given directory
+    Arguments:
+        dataset (object): MyDataset class object
+        model (object) : keras.Model class object
+        directory (str): path to save the plot figure
+        index (int) : image index in dataset object
+    Outputs:
+        save image
     """
-    accuracy = np.trace(cm) / float(np.sum(cm))
-    misclass = 1 - accuracy
-
-    if cmap is None:
-        cmap = plt.get_cmap('Blues')
-
-    plt.figure(figsize=(8, 6))
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(title)
-    plt.colorbar()
-
-    if target_names is not None:
-        tick_marks = np.arange(len(target_names))
-        plt.xticks(tick_marks, target_names, rotation=45)
-        plt.yticks(tick_marks, target_names)
-
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    feature, mask, idx = dataset.get_random_data(index) # get random image, mask and index
+    prediction = model.predict_on_batch(feature)
+    mask, pred_mask = create_mask(mask, prediction) # prepare mask for accuracy calculation and save
+    m = keras.metrics.MeanIoU(num_classes=6)
+    m.update_state(tf.convert_to_tensor(mask, dtype=tf.float32), tf.convert_to_tensor(pred_mask, dtype=tf.float32)) # fit label and predicted label
+    score = m.result().numpy()
+    display({"Feature": feature[0],
+              "Mask": mask[0],
+              "Prediction (Accuracy_{:.4f})".format(score): pred_mask[0]
+              }, idx, directory, score)
 
 
-    thresh = cm.max() / 1.5 if normalize else cm.max() / 2
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        if normalize:
-            plt.text(j, i, "{:0.4f}".format(cm[i, j]),
-                     horizontalalignment="center",
-                     color="white" if cm[i, j] > thresh else "black")
-        else:
-            plt.text(j, i, "{:,}".format(cm[i, j]),
-                     horizontalalignment="center",
-                     color="white" if cm[i, j] > thresh else "black")
+# Save all plot figures
+# ----------------------------------------------------------------------------------------------
+def show_predictions(dataset, model, config):
+    """
+    Summary: 
+        save image/images with their mask, pred_mask and accuracy
+    Arguments:
+        dataset (object): MyDataset class object
+        model (object): keras.Model class object
+        config (dict): configuration dictionary
+    Output:
+        save predicted image/images
+    """
+    # save single image after prediction from dataset
+    if config['single_image']:
+        single_img_show(dataset, model, config['prediction_test_dir'], config['index'])
+    else:
+        idx = 0
+        for feature, mask in dataset: # save all image prediction in the dataset
+            prediction = model.predict_on_batch(feature)
+            mask, pred_mask = create_mask(mask, prediction)
+            for i in range(len(feature)): # save single image prediction in the batch
+                m = keras.metrics.MeanIoU(num_classes=6)
+                m.update_state(mask[i], pred_mask[i])
+                score = m.result().numpy()
+                display({"Feature": feature[i],
+                          "Mask": mask[i],
+                          "Prediction (Accuracy_{:.4f})".format(score): pred_mask[i]
+                          }, idx, config['prediction_test_dir'], score)
+                idx += 1
 
-
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label\naccuracy={:0.4f}; misclass={:0.4f}'.format(accuracy, misclass))
-    plt.show()
+# GPU setting
+# ----------------------------------------------------------------------------------------------
+def set_gpu(gpus):
+    """
+    Summary:
+        setting multi-GPUs or single-GPU strategy for training
+    Arguments:
+        gpus (str): comma separated str variable i.e. "0,1,2"
+    Return:
+        gpu strategy object
+    """
+    gpus = gpus.split(",")
+    if len(gpus)>1:
+        print("MirroredStrategy Enable")
+        GPUS = []
+        for i in range(len(gpus)):
+            GPUS.append("GPU:{}".format(gpus[i]))
+        strategy = tf.distribute.MirroredStrategy(GPUS)
+    else:
+        print("OneDeviceStrategy Enable")
+        GPUS = []
+        for i in range(len(gpus)):
+            GPUS.append("GPU:{}".format(gpus[i]))
+        strategy = tf.distribute.OneDeviceStrategy(GPUS[0])
+    print('Number of devices: %d' % strategy.num_replicas_in_sync)
     
+    return strategy
+
+# Model Output Path
+# ----------------------------------------------------------------------------------------------
+def create_paths(config, test=False):
+    """
+    Summary:
+        creating paths for train and test if not exists
+    Arguments:
+        config (dict): configuration dictionary
+        test (bool): boolean variable for test directory create
+    Return:
+        create directories
+    """
+    if test:
+        pathlib.Path(config['prediction_test_dir']).mkdir(parents = True, exist_ok = True)
+    else:
+        pathlib.Path(config['csv_log_dir']).mkdir(parents = True, exist_ok = True)
+        pathlib.Path(config['tensorboard_log_dir']).mkdir(parents = True, exist_ok = True)
+        pathlib.Path(config['checkpoint_dir']).mkdir(parents = True, exist_ok = True)
+        pathlib.Path(config['prediction_val_dir']).mkdir(parents = True, exist_ok = True)
+
+# Create config path
+# ----------------------------------------------------------------------------------------------
+def get_config_yaml(path, args):
+    """
+    Summary:
+        parsing the config.yaml file and re organize some variables
+    Arguments:
+        path (str): config.yaml file directory
+        args (dict): dictionary of passing arguments
+    Return:
+        a dictonary
+    """
+    with open(path, "r") as f:
+      config = yaml.safe_load(f)
     
+    # Replace default values with passing values
+    for key in args.keys():
+        if args[key]:
+            config[key] = args[key]
+    
+    # Merge paths
+    config['x_train_dir'] = config['dataset_dir']+config['x_train_dir']
+    config['x_valid_dir'] = config['dataset_dir']+config['x_valid_dir']
+    config['x_test_dir'] = config['dataset_dir']+config['x_test_dir']
+    config['y_train_dir'] = config['dataset_dir']+config['y_train_dir']
+    config['y_valid_dir'] = config['dataset_dir']+config['y_valid_dir']
+    config['y_test_dir'] = config['dataset_dir']+config['y_test_dir']
+
+    # Create Callbacks paths
+    config['tensorboard_log_name'] = "{}_epochs_{}_{}".format(config['model_name'],config['epochs'],datetime.now().strftime("%d-%b-%y"))
+    config['tensorboard_log_dir'] = config['root_dir']+'/logs/'+config['model_name']+'/'
+
+    config['csv_log_name'] = "{}_epochs_{}_{}.csv".format(config['model_name'],config['epochs'],datetime.now().strftime("%d-%b-%y"))
+    config['csv_log_dir'] = config['root_dir']+'/csv_logger/'+config['model_name']+'/'
+
+    config['checkpoint_name'] = "{}_epochs_{}_{}.hdf5".format(config['model_name'],config['epochs'],datetime.now().strftime("%d-%b-%y"))
+    config['checkpoint_dir'] = config['root_dir']+'/model/'+config['model_name']+'/'
+
+    # Create save model directory
+    if config['load_model_dir']=='None':
+        config['load_model_dir'] = config['root_dir']+'/model/'+config['model_name']+'/'
+    
+    # Create Evaluation directory
+    config['prediction_test_dir'] = config['root_dir']+'/prediction/'+config['model_name']+'/test/'
+    config['prediction_val_dir'] = config['root_dir']+'/prediction/'+config['model_name']+'/validation/'
+
+    return config

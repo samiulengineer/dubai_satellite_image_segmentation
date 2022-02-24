@@ -1,6 +1,12 @@
+import os
 from tensorflow import keras
 import tensorflow as tf
 import segmentation_models as sm
+
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]= "2"
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
 
 def loss():
     weights = [0.1666, 0.1666, 0.1666, 0.1666, 0.1666, 0.1666]

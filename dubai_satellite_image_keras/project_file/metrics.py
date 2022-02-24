@@ -57,5 +57,37 @@ def dice_coef(y_true, y_pred, smooth=1):
     dice = K.mean((2. * intersection + smooth)/(union + smooth), axis=0)
     return dice
 
-metrics = ['acc', jacard_coef, precision_m, recall_m, f1_m, iou_coef, dice_coef, subset_accuracy, cat_acc]
-# metrics = ['acc']
+# Keras MeanIoU
+# ----------------------------------------------------------------------------------------------
+
+class MyMeanIOU(tf.keras.metrics.MeanIoU):
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        return super().update_state(tf.argmax(y_true, axis=3), tf.argmax(y_pred, axis=3), sample_weight)
+
+
+# Matrics
+# ----------------------------------------------------------------------------------------------
+
+def get_metrics(config):
+    """
+    Summary:
+        create keras MeanIoU object and all custom metrics dictornary
+    Arguments:
+        config (dict): configuration dictionary
+    Return:
+        metrics directories
+    """
+
+    
+    m = MyMeanIOU(config['num_classes'])
+    return {'jacard_coef':jacard_coef,
+            'precision_m':precision_m,
+            'recall_m':recall_m,
+            'f1_m':f1_m,
+            'iou_coef':iou_coef,
+            'dice_coef':dice_coef,
+            'subset_accuracy':subset_accuracy,
+            'cat_acc':cat_acc,
+            'MyMeanIOU': m
+          }
+#metrics = ['acc']
