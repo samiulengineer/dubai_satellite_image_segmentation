@@ -2,6 +2,7 @@ import os
 import sys
 import math
 import glob
+import time
 import argparse
 from loss import *
 from model import get_model, get_model_transfer_lr
@@ -11,6 +12,8 @@ from utils import set_gpu, SelectCallbacks, get_config_yaml, create_paths
 from dataset import get_train_val_dataloader
 from tensorflow.keras.models import load_model
 from tensorflow.keras import mixed_precision
+gpus = tf.config.experimental.list_physical_devices('GPU')
+print(gpus)
 
 mixed_precision.set_global_policy('mixed_float16')
 
@@ -96,7 +99,7 @@ loggers = SelectCallbacks(val_dataset, model, config)
 
 # fit
 # ----------------------------------------------------------------------------------------------
-
+t0 = time.time()
 history = model.fit(train_dataset,
                     verbose = 1, 
                     epochs = config['epochs'],
@@ -104,4 +107,5 @@ history = model.fit(train_dataset,
                     shuffle = False,
                     callbacks = loggers.get_callbacks(val_dataset, model),
                     )
+print(time.time() - t0)
 #model.save('/content/drive/MyDrive/CSML_dataset/model/my_model.h5')

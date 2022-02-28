@@ -1,165 +1,139 @@
-name: tf
+name: tf_2.6
 channels:
-  - conda-forge
   - defaults
 dependencies:
-  - _libgcc_mutex=0.1=main
-  - _openmp_mutex=4.5=1_gnu
   - _tflow_select=2.1.0=gpu
-  - absl-py=0.13.0=py37h06a4308_0
-  - aiohttp=3.8.1=py37h7f8727e_0
+  - abseil-cpp=20210324.2=hd77b12b_0
+  - absl-py=0.15.0=pyhd3eb1b0_0
+  - aiohttp=3.8.1=py39h2bbff1b_0
   - aiosignal=1.2.0=pyhd3eb1b0_0
-  - argcomplete=1.12.3=pyhd8ed1ab_0
-  - astor=0.8.1=py37h06a4308_0
+  - astor=0.8.1=py39haa95532_0
+  - astunparse=1.6.3=py_0
   - async-timeout=4.0.1=pyhd3eb1b0_0
-  - asynctest=0.13.0=py_0
-  - attrs=21.2.0=pyhd3eb1b0_0
-  - backcall=0.2.0=pyh9f0ad1d_0
-  - backports=1.0=py_2
-  - backports.functools_lru_cache=1.6.4=pyhd8ed1ab_0
+  - attrs=21.4.0=pyhd3eb1b0_0
   - blas=1.0=mkl
-  - blinker=1.4=py37h06a4308_0
-  - brotlipy=0.7.0=py37h27cfd23_1003
-  - c-ares=1.17.1=h27cfd23_0
-  - ca-certificates=2021.10.26=h06a4308_2
-  - cached-property=1.5.2=py_0
+  - blinker=1.4=py39haa95532_0
+  - brotlipy=0.7.0=py39h2bbff1b_1003
+  - ca-certificates=2021.10.26=haa95532_4
   - cachetools=4.2.2=pyhd3eb1b0_0
-  - certifi=2021.10.8=py37h06a4308_0
-  - cffi=1.14.6=py37h400218f_0
+  - certifi=2021.10.8=py39haa95532_2
+  - cffi=1.15.0=py39h2bbff1b_1
   - charset-normalizer=2.0.4=pyhd3eb1b0_0
   - click=8.0.3=pyhd3eb1b0_0
-  - cryptography=3.4.8=py37hd23ed53_0
-  - cudatoolkit=10.0.130=0
-  - cudnn=7.6.5=cuda10.0_0
-  - cupti=10.0.130=0
-  - debugpy=1.5.1=py37h295c915_0
-  - decorator=5.1.0=pyhd8ed1ab_0
-  - entrypoints=0.3=pyhd8ed1ab_1003
-  - frozenlist=1.2.0=py37h7f8727e_0
-  - gast=0.2.2=py37_0
+  - cryptography=3.4.8=py39h71e12ea_0
+  - cudatoolkit=11.3.1=h59b6b97_2
+  - cudnn=8.2.1=cuda11.3_0
+  - dataclasses=0.8=pyh6d0b6a4_7
+  - flatbuffers=2.0.0=h6c2663c_0
+  - frozenlist=1.2.0=py39h2bbff1b_0
+  - gast=0.4.0=pyhd3eb1b0_0
+  - giflib=5.2.1=h62dcd97_0
   - google-auth=1.33.0=pyhd3eb1b0_0
-  - google-auth-oauthlib=0.4.4=pyhd3eb1b0_0
+  - google-auth-oauthlib=0.4.1=py_2
   - google-pasta=0.2.0=pyhd3eb1b0_0
-  - grpcio=1.42.0=py37hce63b2e_0
-  - hdf5=1.10.6=hb1b8bf9_0
+  - grpcio=1.42.0=py39hc60d5dd_0
+  - h5py=3.6.0=py39h3de5c98_0
+  - hdf5=1.10.6=h7ebc959_0
+  - icc_rt=2019.0.0=h0cc432a_1
+  - icu=68.1=h6c2663c_0
   - idna=3.3=pyhd3eb1b0_0
-  - importlib-metadata=4.8.1=py37h06a4308_0
-  - intel-openmp=2021.4.0=h06a4308_3561
-  - ipykernel=6.5.1=py37h6531663_0
-  - ipython=7.31.0=py37h89c1867_0
-  - jedi=0.18.1=py37h89c1867_0
-  - jupyter_client=7.1.0=pyhd8ed1ab_0
-  - jupyter_core=4.9.1=py37h89c1867_1
-  - keras-applications=1.0.8=py_1
+  - importlib-metadata=4.8.2=py39haa95532_0
+  - intel-openmp=2021.4.0=haa95532_3556
+  - jpeg=9d=h2bbff1b_0
   - keras-preprocessing=1.1.2=pyhd3eb1b0_0
-  - ld_impl_linux-64=2.35.1=h7274673_9
-  - libblas=3.9.0=12_linux64_mkl
-  - libcblas=3.9.0=12_linux64_mkl
-  - libffi=3.3=he6710b0_2
-  - libgcc-ng=9.3.0=h5101ec6_17
-  - libgfortran-ng=7.5.0=ha8ba4b0_17
-  - libgfortran4=7.5.0=ha8ba4b0_17
-  - libgomp=9.3.0=h5101ec6_17
-  - liblapack=3.9.0=12_linux64_mkl
-  - libprotobuf=3.17.2=h4ff587b_1
-  - libsodium=1.0.18=h36c2ea0_1
-  - libstdcxx-ng=9.3.0=hd4cf53a_17
-  - markdown=3.3.4=py37h06a4308_0
-  - matplotlib-inline=0.1.3=pyhd8ed1ab_0
-  - mkl=2021.4.0=h06a4308_640
-  - mkl-service=2.4.0=py37h7f8727e_0
-  - mkl_fft=1.3.1=py37hd3c417c_0
-  - mkl_random=1.2.2=py37h51133e4_0
-  - multidict=5.1.0=py37h27cfd23_2
-  - ncurses=6.3=h7f8727e_2
-  - nest-asyncio=1.5.4=pyhd8ed1ab_0
+  - libcurl=7.80.0=h86230a5_0
+  - libpng=1.6.37=h2a8f88b_0
+  - libprotobuf=3.17.2=h23ce68f_1
+  - libssh2=1.9.0=h7a1dbc1_1
+  - markdown=3.3.4=py39haa95532_0
+  - mkl=2021.4.0=haa95532_640
+  - mkl-service=2.4.0=py39h2bbff1b_0
+  - mkl_fft=1.3.1=py39h277e83a_0
+  - mkl_random=1.2.2=py39hf11a4ad_0
+  - multidict=5.1.0=py39h2bbff1b_2
+  - numpy=1.21.2=py39hfca59bb_0
+  - numpy-base=1.21.2=py39h0829f74_0
   - oauthlib=3.1.1=pyhd3eb1b0_0
-  - openssl=1.1.1l=h7f8727e_0
+  - openssl=1.1.1m=h2bbff1b_0
   - opt_einsum=3.3.0=pyhd3eb1b0_1
-  - parso=0.8.3=pyhd8ed1ab_0
-  - pexpect=4.8.0=pyh9f0ad1d_2
-  - pickleshare=0.7.5=py_1003
-  - pip=21.2.2=py37h06a4308_0
-  - prompt-toolkit=3.0.22=pyha770c72_0
-  - protobuf=3.17.2=py37h295c915_0
-  - ptyprocess=0.7.0=pyhd3deb0d_0
+  - pip=21.2.4=py39haa95532_0
+  - protobuf=3.17.2=py39hd77b12b_0
   - pyasn1=0.4.8=pyhd3eb1b0_0
   - pyasn1-modules=0.2.8=py_0
   - pycparser=2.21=pyhd3eb1b0_0
-  - pygments=2.10.0=pyhd8ed1ab_0
-  - pyjwt=2.1.0=py37h06a4308_0
+  - pyjwt=2.1.0=py39haa95532_0
   - pyopenssl=21.0.0=pyhd3eb1b0_1
-  - pysocks=1.7.1=py37_1
-  - python=3.7.11=h12debd9_0
-  - python-dateutil=2.8.2=pyhd8ed1ab_0
-  - python_abi=3.7=2_cp37m
-  - pyzmq=19.0.2=py37hac76be4_2
-  - readline=8.1=h27cfd23_0
-  - requests=2.26.0=pyhd3eb1b0_0
+  - pyreadline=2.1=py39haa95532_1
+  - pysocks=1.7.1=py39haa95532_0
+  - python=3.9.7=h6244533_1
+  - python-flatbuffers=1.12=pyhd3eb1b0_0
+  - requests=2.27.1=pyhd3eb1b0_0
   - requests-oauthlib=1.3.0=py_0
   - rsa=4.7.2=pyhd3eb1b0_1
-  - scipy=1.7.1=py37h292c36d_2
-  - setuptools=58.0.4=py37h06a4308_0
+  - scipy=1.7.3=py39h0a974cb_0
+  - setuptools=58.0.4=py39haa95532_0
   - six=1.16.0=pyhd3eb1b0_0
-  - sqlite=3.36.0=hc218d9a_0
-  - tensorboard=2.4.0=pyhc547734_0
+  - snappy=1.1.8=h33f27b4_0
+  - sqlite=3.37.0=h2bbff1b_0
+  - tensorboard=2.6.0=py_1
+  - tensorboard-data-server=0.6.0=py39haa95532_0
   - tensorboard-plugin-wit=1.6.0=py_0
-  - tensorflow=2.0.0=gpu_py37h768510d_0
-  - tensorflow-base=2.0.0=gpu_py37h0ec5d1f_0
-  - tensorflow-estimator=2.0.0=pyh2649769_0
-  - tensorflow-gpu=2.0.0=h0d30ee6_0
-  - termcolor=1.1.0=py37h06a4308_1
-  - tk=8.6.11=h1ccaba5_0
-  - tornado=6.1=py37h5e8e339_1
-  - traitlets=5.1.1=pyhd8ed1ab_0
+  - tensorflow=2.6.0=gpu_py39he88c5ba_0
+  - tensorflow-base=2.6.0=gpu_py39hb3da07e_0
+  - tensorflow-estimator=2.6.0=pyh7b7c402_0
+  - tensorflow-gpu=2.6.0=h17022bd_0
+  - termcolor=1.1.0=py39haa95532_1
   - typing-extensions=3.10.0.2=hd3eb1b0_0
   - typing_extensions=3.10.0.2=pyh06a4308_0
-  - urllib3=1.26.7=pyhd3eb1b0_0
-  - wcwidth=0.2.5=pyh9f0ad1d_2
-  - werkzeug=0.16.1=py_0
-  - wheel=0.37.0=pyhd3eb1b0_1
-  - wrapt=1.12.1=py37h7b6447c_1
-  - xz=5.2.5=h7b6447c_0
-  - yarl=1.6.3=py37h27cfd23_0
-  - zeromq=4.3.4=h9c3ff4c_0
-  - zipp=3.6.0=pyhd3eb1b0_0
-  - zlib=1.2.11=h7b6447c_3
+  - tzdata=2021e=hda174b7_0
+  - urllib3=1.26.8=pyhd3eb1b0_0
+  - vc=14.2=h21ff451_1
+  - vs2015_runtime=14.27.29016=h5e58377_2
+  - werkzeug=2.0.2=pyhd3eb1b0_0
+  - wheel=0.35.1=pyhd3eb1b0_0
+  - win_inet_pton=1.1.0=py39haa95532_0
+  - wincertstore=0.2=py39haa95532_2
+  - wrapt=1.13.3=py39h2bbff1b_2
+  - yarl=1.6.3=py39h2bbff1b_0
+  - zipp=3.7.0=pyhd3eb1b0_0
+  - zlib=1.2.11=h8cc25b3_4
   - pip:
+    - ansicon==1.89.0
+    - blessed==1.19.1
     - blessings==1.7
+    - colorama==0.4.4
     - cycler==0.11.0
     - efficientnet==1.0.0
-    - fast-ml==3.68
-    - fonttools==4.28.2
-    - gpustat==0.6.0
-    - h5py==2.10.0
+    - fonttools==4.29.1
+    - gpustat==1.0.0.dev1
     - image-classifiers==1.0.0
-    - imageio==2.13.1
+    - imageio==2.14.1
+    - importlib==1.0.4
+    - jinxed==1.1.0
     - joblib==1.1.0
-    - keras==2.7.0
+    - keras==2.6.0
+    - keras-applications==1.0.8
     - kiwisolver==1.3.2
-    - matplotlib==3.5.0
+    - matplotlib==3.5.1
     - networkx==2.6.3
-    - numpy==1.21.4
     - nvidia-ml-py==11.450.51
     - nvidia-ml-py3==7.352.0
-    - nvitop==0.5.1.4
-    - opencv-python==4.5.4.60
+    - nvitop==0.5.2.1
+    - opencv-python==4.5.5.62
     - packaging==21.3
-    - pandas==1.3.4
     - patchify==0.2.3
-    - pillow==8.4.0
-    - psutil==5.8.0
-    - pyparsing==3.0.6
-    - pytz==2021.3
+    - pillow==9.0.1
+    - psutil==5.9.0
+    - pyparsing==3.0.7
+    - python-dateutil==2.8.2
     - pywavelets==1.2.0
-    - scikit-image==0.18.3
-    - scikit-learn==1.0.1
-    - seaborn==0.11.2
+    - pyyaml==6.0
+    - scikit-image==0.19.1
+    - scikit-learn==1.0.2
     - segmentation-models==1.0.1
-    - setuptools-scm==6.3.2
     - sklearn==0.0
-    - threadpoolctl==3.0.0
-    - tifffile==2021.11.2
-    - tomli==1.2.2
-    - tqdm==4.62.3
-prefix: /home/mdsamiul/anaconda3/envs/tf
+    - threadpoolctl==3.1.0
+    - tifffile==2022.2.2
+    - wcwidth==0.2.5
+    - windows-curses==2.3.0
+prefix: C:\Users\mojam\anaconda3\envs\tf-gpu

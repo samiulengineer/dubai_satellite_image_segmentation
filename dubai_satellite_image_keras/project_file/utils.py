@@ -57,7 +57,7 @@ class SelectCallbacks(keras.callbacks.Callback):
             save predict mask
         """
         if (epoch % self.config['val_plot_epoch'] == 0): # every after certain epochs the model will predict mask
-            single_img_show(self.val_dataset, self.model, self.config['prediction_val_dir'], self.config['index'])
+            show_predictions(self.val_dataset, self.model, self.config, val=True)
 
     def get_callbacks(self, val_dataset, model):
         """
@@ -133,33 +133,7 @@ def display(display_list, idx, directory, score):
 
 # Save single plot figure
 # ----------------------------------------------------------------------------------------------
-def single_img_show(dataset, model, directory, index):
-    """
-    Summary:
-        save single image into the given directory
-    Arguments:
-        dataset (object): MyDataset class object
-        model (object) : keras.Model class object
-        directory (str): path to save the plot figure
-        index (int) : image index in dataset object
-    Outputs:
-        save image
-    """
-    feature, mask, idx = dataset.get_random_data(index) # get random image, mask and index
-    prediction = model.predict_on_batch(feature)
-    mask, pred_mask = create_mask(mask, prediction) # prepare mask for accuracy calculation and save
-    m = keras.metrics.MeanIoU(num_classes=6)
-    m.update_state(tf.convert_to_tensor(mask, dtype=tf.float32), tf.convert_to_tensor(pred_mask, dtype=tf.float32)) # fit label and predicted label
-    score = m.result().numpy()
-    display({"Feature": feature[0],
-              "Mask": mask[0],
-              "Prediction (Accuracy_{:.4f})".format(score): pred_mask[0]
-              }, idx, directory, score)
-
-
-# Save all plot figures
-# ----------------------------------------------------------------------------------------------
-def show_predictions(dataset, model, config):
+def show_predictions(dataset, model, config, val=False):
     """
     Summary: 
         save image/images with their mask, pred_mask and accuracy
@@ -170,23 +144,33 @@ def show_predictions(dataset, model, config):
     Output:
         save predicted image/images
     """
+
+    if val:
+        directory = config['prediction_val_dir']
+    else:
+        directory = config['prediction_test_dir']
+
     # save single image after prediction from dataset
     if config['single_image']:
-        single_img_show(dataset, model, config['prediction_test_dir'], config['index'])
+        feature, mask, idx = dataset.get_random_data(config['index'])
+        data = [(feature, mask)]
     else:
+        data = dataset
         idx = 0
-        for feature, mask in dataset: # save all image prediction in the dataset
-            prediction = model.predict_on_batch(feature)
-            mask, pred_mask = create_mask(mask, prediction)
-            for i in range(len(feature)): # save single image prediction in the batch
-                m = keras.metrics.MeanIoU(num_classes=6)
-                m.update_state(mask[i], pred_mask[i])
-                score = m.result().numpy()
-                display({"Feature": feature[i],
-                          "Mask": mask[i],
-                          "Prediction (Accuracy_{:.4f})".format(score): pred_mask[i]
-                          }, idx, config['prediction_test_dir'], score)
-                idx += 1
+
+    for feature, mask in data: # save all image prediction in the dataset
+        prediction = model.predict_on_batch(feature)
+        mask, pred_mask = create_mask(mask, prediction)
+        for i in range(len(feature)): # save single image prediction in the batch
+            m = keras.metrics.MeanIoU(num_classes=6)
+            m.update_state(mask[i], pred_mask[i])
+            score = m.result().numpy()
+            display({"Feature": feature[i],
+                      "Mask": mask[i],
+                      "Prediction (Accuracy_{:.4f})".format(score): pred_mask[i]
+                      }, idx, directory, score)
+            idx += 1
+
 
 # GPU setting
 # ----------------------------------------------------------------------------------------------

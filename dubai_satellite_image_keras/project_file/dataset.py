@@ -9,6 +9,7 @@ from loss import *
 import numpy as np
 from PIL import Image
 import tensorflow as tf
+import albumentations as A
 from patchify import patchify
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
@@ -290,8 +291,11 @@ class Augment(tf.keras.layers.Layer):
 
         self.ratio=ratio
         self.aug_img_batch = math.ceil(batch_size*ratio)
-        self.augment_features = tf.keras.layers.RandomFlip(mode="horizontal", seed=seed)
-        self.augment_labels = tf.keras.layers.RandomFlip(mode="horizontal", seed=seed)
+        self.aug = A.Compose([
+                    A.VerticalFlip(p=0.5),
+                    A.HorizontalFlip(p=0.5),
+                    A.RandomRotate90(p=0.5),
+                    A.Blur(p=0.5),])
 
     def call(self, feature_dir, label_dir):
         """
@@ -309,9 +313,13 @@ class Augment(tf.keras.layers.Layer):
         aug_idx = np.random.randint(0, len(feature_dir), self.aug_img_batch)
         features = []
         labels = []
+
         for i in aug_idx:
-            features.append(self.augment_features(read_img(feature_dir[i]), norm=True))
-            labels.append(self.augment_labels(read_img(label_dir[i], rgb=True)))
+            img = read_img(feature_dir[i], norm=True)
+            mask = read_img(label_dir[i], rgb=True)
+            augmented = self.aug(image=img, mask=mask)
+            features.append(augmented['image'])
+            labels.append(augmented['mask'])
         return features, labels
 
 

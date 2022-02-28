@@ -4,13 +4,13 @@ import tensorflow as tf
 import segmentation_models as sm
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]= "2"
+os.environ["CUDA_VISIBLE_DEVICES"]= "4"
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
 
 def loss():
     weights = [0.1666, 0.1666, 0.1666, 0.1666, 0.1666, 0.1666]
-    dice_loss = sm.losses.DiceLoss(class_weights=weights) 
+    dice_loss = sm.losses.DiceLoss(class_weights=weights)
     focal_loss = sm.losses.CategoricalFocalLoss()
     total_loss = dice_loss + (1 * focal_loss) 
     return total_loss
