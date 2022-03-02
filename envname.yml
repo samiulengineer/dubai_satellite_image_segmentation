@@ -1,4 +1,0 @@
-name: ENVNAME
-channels:
-  - defaults
-prefix: /home/mdsamiul/anaconda3/envs/ENVNAME

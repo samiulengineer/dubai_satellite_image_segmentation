@@ -9,8 +9,8 @@ num_classes : 6
 # Training
 # ----------------------------------------------------------------------------------------------
 # unet/mod-unet/dncnn/u2net/vnet/unet++
-model_name : &model unet
-batch_size : 10
+model_name : vnet
+batch_size : 3
 epochs : 25
 learning_rate : !!float 3e-4
 val_plot_epoch : 30

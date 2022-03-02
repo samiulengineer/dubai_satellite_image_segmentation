@@ -497,7 +497,7 @@ def DnCNN(config):
         x = BatchNormalization(axis=-1, epsilon=1e-3)(x)
         x = Activation('relu')(x)   
     # last layer, Conv
-    x = Conv2D(config['num_classes'], (1, 1), activation='softmax')(x)
+    x = Conv2D(config['num_classes'], (1, 1), activation='softmax', dtype='float32')(x)
     # x = Conv2D(filters=6, kernel_size=(3,3), strides=(1,1), padding='same')(x)
     # x = tf.keras.layers.Subtract()([inpt, x])   # input - noise
     model = Model(inputs=inpt, outputs=x)
@@ -553,7 +553,7 @@ def vnet(config):
     for d in range(stage_num-1, 0, -1):
         conv_up = up_resBlock(features[d-1], conv_up, d)
 
-    output = Conv2D(config['num_classes'], 1, activation = 'softmax', padding = 'same', kernel_initializer = 'he_normal')(conv_up)
+    output = Conv2D(config['num_classes'], 1, activation = 'softmax', padding = 'same', kernel_initializer = 'he_normal', dtype='float32')(conv_up)
         
     model = Model(inputs = [input], outputs = [output])
 
@@ -726,7 +726,7 @@ def unet_plus_plus(config):
     x04 = LeakyReLU(0.01)(x04)
     x04 = Dropout(0.2)(x04)
 
-    output = Conv2D(config['num_classes'], kernel_size = (1, 1), activation = 'softmax')(x04)
+    output = Conv2D(config['num_classes'], kernel_size = (1, 1), activation = 'softmax', dtype='float32')(x04)
  
     model = Model(inputs=[input], outputs=[output])
     
