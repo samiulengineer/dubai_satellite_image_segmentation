@@ -138,7 +138,7 @@ python train.py --gpu "0" \
 Models prediction after 30 epochs of training and each prediction `keras.metrics.MeanIou` accuracy.
 Unet             |
 :-------------------------:
-![Alternate text](u_test_img_107_acc_0.6093.jpeg)
+![Alternate text](u_test_img_107_acc_0.6093.png)
 U2net             |
 ![Alternate text](u2_test_img_107_acc_0.6805.png)
 Unet + +             |

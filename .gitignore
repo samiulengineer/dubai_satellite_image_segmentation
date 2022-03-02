@@ -159,7 +159,6 @@ wandb
 *.gz
 *.profile-empty
 *.csv
-*.png
 
 # dataset generated from bolts in examples.
 cifar-10-batches-py
@@ -169,6 +168,7 @@ tags
 # data
 data
 *trace
+prediction
 
 
 
