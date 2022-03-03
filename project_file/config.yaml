@@ -23,7 +23,7 @@ gpu : !!str 4
 # ----------------------------------------------------------------------------------------------
 patch_size : 256 # height = width, anyone is suitable
 dataset_dir : /home/mdsamiul/semantic-segmentation/data/Aerial_Image/
-root_dir : &root /home/mdsamiul/semantic-segmentation/dubai_satellite_image_keras
+root_dir : &root /home/mdsamiul/semantic-segmentation
 train_size : 0.8
 x_train_dir : train/img/
 x_valid_dir : valid/img/

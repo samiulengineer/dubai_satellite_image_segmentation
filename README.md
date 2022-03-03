@@ -4,6 +4,10 @@
 
 In this project we are tring to predict corresponding mask or segment image from given satelite image or feature. Image segmentation model can be use to extract real life objects from images, blur background, self driving car and other image processing tasks.
 
+## Environment Setup
+
+
+
 ## Dataset
 
 For our practice we use [Semantic segmentation of aerial imagery](https://www.kaggle.com/humansintheloop/semantic-segmentation-of-aerial-imagery) data from kaggle. The dataset contains 72 images which group into 8 larger tiles for 6 classes each tiles contain 9 images of same dimension or close to each other. The classes are as follows:
