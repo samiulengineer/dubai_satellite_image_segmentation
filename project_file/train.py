@@ -15,7 +15,7 @@ from tensorflow.keras import mixed_precision
 gpus = tf.config.experimental.list_physical_devices('GPU')
 print(gpus)
 
-mixed_precision.set_global_policy('mixed_float16')
+#mixed_precision.set_global_policy('mixed_float16')
 
 # Parsing variable
 # ----------------------------------------------------------------------------------------------

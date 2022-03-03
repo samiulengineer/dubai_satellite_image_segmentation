@@ -9,14 +9,14 @@ num_classes : 6
 # Training
 # ----------------------------------------------------------------------------------------------
 # unet/mod-unet/dncnn/u2net/vnet/unet++
-model_name : vnet
-batch_size : 3
-epochs : 25
+model_name : mod-unet
+batch_size : 10
+epochs : 3
 learning_rate : !!float 3e-4
-val_plot_epoch : 30
+val_plot_epoch : 1
 augment : True
 transfer_lr : False
-gpu : !!str 4
+gpu : !!str 2
 
 
 # Dataset
