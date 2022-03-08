@@ -1,3 +1,6 @@
+from tensorflow.keras import backend as K
+K.clear_session()
+
 import os
 import sys
 import math
@@ -12,9 +15,9 @@ from utils import set_gpu, SelectCallbacks, get_config_yaml, create_paths
 from dataset import get_train_val_dataloader
 from tensorflow.keras.models import load_model
 from tensorflow.keras import mixed_precision
-gpus = tf.config.experimental.list_physical_devices('GPU')
-print(gpus)
 
+
+tf.config.optimizer.set_jit(True)
 #mixed_precision.set_global_policy('mixed_float16')
 
 # Parsing variable
@@ -43,7 +46,7 @@ create_paths(config)
 # Setup train strategy Muli-GPU or single-GPU
 # ----------------------------------------------------------------------------------------------
 
-strategy = set_gpu(config['gpu'])
+#strategy = set_gpu(config['gpu'])
 
 
 # Print Experimental Setup before Training
@@ -63,31 +66,33 @@ train_dataset, val_dataset = get_train_val_dataloader(config)
 
 
 # enable training strategy
-with strategy.scope():
-    metrics = ['acc'] + list(get_metrics(config).values())
-    adam = keras.optimizers.Adam(learning_rate = config['learning_rate'])
+#with strategy.scope():
+metrics = ['acc'] + list(get_metrics(config).values())
+adam = keras.optimizers.Adam(learning_rate = config['learning_rate'])
+#adam = tf.keras.mixed_precision.LossScaleOptimizer(adam)
 
-    # create dictionary with all custom function to pass in custom_objects
-    custom_obj = get_metrics(config) 
-    custom_obj['loss'] = focal_loss()
+
+# create dictionary with all custom function to pass in custom_objects
+custom_obj = get_metrics(config) 
+custom_obj['loss'] = focal_loss()
     
-    if (os.path.exists(os.path.join(config['load_model_dir'], config['load_model_name']))) and config['transfer_lr']:
-        print("Build model for transfer learning..")
+if (os.path.exists(os.path.join(config['load_model_dir'], config['load_model_name']))) and config['transfer_lr']:
+    print("Build model for transfer learning..")
+    # load model and compile
+    model = load_model(os.path.join(config['load_model_dir'], config['load_model_name']), custom_objects=custom_obj, compile = True)
+
+    model = get_model_transfer_lr(model, config['num_classes'])
+    model.compile(optimizer = adam, loss = focal_loss(), metrics = metrics)
+
+else:
+    if (os.path.exists(os.path.join(config['load_model_dir'], config['load_model_name']))):
+        print("Resume training from model checkpoint {}...".format(config['load_model_name']))
         # load model and compile
         model = load_model(os.path.join(config['load_model_dir'], config['load_model_name']), custom_objects=custom_obj, compile = True)
 
-        model = get_model_transfer_lr(model, config['num_classes'])
-        model.compile(optimizer = adam, loss = focal_loss(), metrics = metrics)
-
     else:
-        if (os.path.exists(os.path.join(config['load_model_dir'], config['load_model_name']))):
-            print("Resume training from model checkpoint {}...".format(config['load_model_name']))
-            # load model and compile
-            model = load_model(os.path.join(config['load_model_dir'], config['load_model_name']), custom_objects=custom_obj, compile = True)
-
-        else:
-            model = get_model(config)
-            model.compile(optimizer = adam, loss = focal_loss(), metrics = metrics)
+        model = get_model(config)
+        model.compile(optimizer = adam, loss = focal_loss(), metrics = metrics)
 
 
 # Set up Callbacks

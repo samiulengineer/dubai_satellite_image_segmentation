@@ -99,7 +99,7 @@ def unet(config):
 # Modification UNET Model
 # ----------------------------------------------------------------------------------------------
 
-def mod_unet(config):
+def mnet(config):
     
     inputs = Input((config['height'], config['width'], config['in_channels']))
     
@@ -746,8 +746,6 @@ def get_model_transfer_lr(model, num_classes):
     Return:
         model (object): keras.Model class object
     """
-
-
     x = model.layers[-2].output # fetch the last layer previous layer output
     
     output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax')(x) # create new last layer
@@ -772,10 +770,8 @@ def get_model(config):
     Return:
         model (object): keras.Model class object
     """
-
-
     models = {'unet': unet,
-              'mod-unet': mod_unet,
+              'mnet': mnet,
               'dncnn': DnCNN,
               'u2net': u2net,
               'vnet': vnet,

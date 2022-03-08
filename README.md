@@ -8,6 +8,15 @@ In this project we are tring to predict corresponding mask or segment image from
 
 
 
+## Logger Path
+
+During model training following paths will be created automatically.
+
+1. csv_logger: model metrics will be saved in csv format
+2. logs: tensorboard logger file will be saved here
+3. model: model checkpoint will be saved here
+4. prediction: validation and testing prediction will be saved here
+
 ## Dataset
 
 For our practice we use [Semantic segmentation of aerial imagery](https://www.kaggle.com/humansintheloop/semantic-segmentation-of-aerial-imagery) data from kaggle. The dataset contains 72 images which group into 8 larger tiles for 6 classes each tiles contain 9 images of same dimension or close to each other. The classes are as follows:
@@ -25,6 +34,10 @@ Image             |  Mask
 :-------------------------:|:-------------------------:
 ![Alternate text](image_part_001.jpg)  |  ![Alternate text](image_part_001.png)
 
+## Downloasd Dataset
+
+Download dataset from [here](https://www.google.com/url?q=https%3A%2F%2Fwww.kaggle.com%2Fhumansintheloop%2Fsemantic-segmentation-of-aerial-imagery&sa=D)
+
 ## Models
 
 The following models are available in this repository. We train all the models for our project.
@@ -38,20 +51,20 @@ The following models are available in this repository. We train all the models f
 
 ## Setup
 
-Create a new environment and install dependency from `requirement.txt`file. Before start training check the variable inside config.yaml i.e. `height`, `in_channels`. Asuming that you have images in `image.jpg` and masks in `mask.png` format and data directory looks like following you can directly go for [training](##Training) skip the below part.
+Before start training check the variable inside config.yaml i.e. `height`, `in_channels`. Asuming that you have images in `image.jpg` and masks in `mask.png` format and data directory looks like following you can directly go for [training](##Training) skip the below part.
 
 ```
 --dataset
     --Tile1
         --images
-            --image.jpg
+            --image.png
             ..
         --masks
             --mask.png
             ..
     --Tile2
         --images
-            --image.jpg
+            --image.png
             ..
         --masks
             --mask.png
@@ -65,21 +78,21 @@ For train model in a new dataset you need to follow the following directory form
 --dataset
     --train
         --img
-            --image.jpg
+            --image.png
             ..
         --mask
             --mask.png
             ..
     --valid
         --img
-            --image.jpg
+            --image.png
             ..
         --mask
             --mask.png
             ..
     --test
         --img
-            --image.jpg
+            --image.png
             ..
         --mask
             --mask.png

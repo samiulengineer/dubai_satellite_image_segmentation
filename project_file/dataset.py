@@ -399,7 +399,11 @@ class MyDataset(Sequence):
             else:
                 tgts = tgts+aug_masks
 
-        return np.array(imgs), np.array(tgts)
+        return tf.convert_to_tensor(imgs), tf.convert_to_tensor(tgts)
+    
+    
+    def getitem(self, idx):
+        return self.__getitem__(idx)
     
 
     def get_random_data(self, idx=-1):
@@ -469,9 +473,26 @@ def get_train_val_dataloader(config):
     # create dataloader object
     train_dataset = MyDataset(x_train, y_train, batch_size=n_batch_size, transform_fn=transform_data, num_class=config['num_classes'], augment=augment_obj)
     val_dataset = MyDataset(x_valid, y_valid, batch_size=config['batch_size'], transform_fn=transform_data, num_class=config['num_classes'])
+    """
+    def train_data_generator():
+        for i in range(len(train_dataset)):
+            yield train_dataset.getitem(i)
     
-    return train_dataset, val_dataset
+    def val_data_generator():
+        for i in range(len(val_dataset)):
+            yield val_dataset.getitem(i)
 
+    tf_train_dataset =  tf.data.Dataset.from_generator(train_data_generator, output_signature=(
+        tf.TensorSpec(shape=(None, config['height'], config['width'], config['in_channels']), dtype=tf.float32),
+        tf.TensorSpec(shape=(None, config['height'], config['width'], config['num_classes']), dtype=tf.float32)))  #according to tf.data.Dataset.from_generator documentation we have to specify output_signature
+    
+    tf_val_dataset =  tf.data.Dataset.from_generator(val_data_generator, output_signature=(
+        tf.TensorSpec(shape=(None, config['height'], config['width'], config['in_channels']), dtype=tf.float32),
+        tf.TensorSpec(shape=(None, config['height'], config['width'], config['num_classes']), dtype=tf.float32)))  #according to tf.data.Dataset.from_generator documentation we have to specify output_signature
+
+    return tf_train_dataset, tf_val_dataset
+    """
+    return train_dataset, val_dataset
 
 def get_test_dataloader(config):
     """

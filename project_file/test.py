@@ -34,7 +34,7 @@ create_paths(config, True)
 # Setup test strategy Muli-GPU or single-GPU
 # ----------------------------------------------------------------------------------------------
 
-strategy = set_gpu(config['gpu'])
+#strategy = set_gpu(config['gpu'])
 
 # Dataset
 # ----------------------------------------------------------------------------------------------
@@ -49,8 +49,8 @@ test_dataset = get_test_dataloader(config)
    model_name is included inside the load_model_dir"""
 
 print("Loading model {} from {}".format(config['load_model_name'], config['load_model_dir']))
-with strategy.scope():
-    model = load_model(os.path.join(config['load_model_dir'], config['load_model_name']), compile = False)
+#with strategy.scope():
+model = load_model(os.path.join(config['load_model_dir'], config['load_model_name']), compile = False)
 
 # Prediction Plot
 # ----------------------------------------------------------------------------------------------
